@@ -59,6 +59,9 @@ MultiProperty::MultiProperty(Controller& controller, QWidget* parent, float guiS
 	connect(m_ui.clipMaxToolButton, &QToolButton::clicked, this, [this]() {updateToolButton(m_ui.clipMaxToolButton); });
 	connect(m_ui.clipMinToolButton, &QToolButton::clicked, this, [this]() {updateToolButton(m_ui.clipMinToolButton); });
 
+	connect(m_ui.comboPhase, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MultiProperty::onPhaseChange);
+
+
 	connect(m_ui.activeRampToolButton, &QToolButton::clicked, this, [this]() {updateToolButton(m_ui.activeRampToolButton); });
 	connect(m_ui.rampMinToolButton, &QToolButton::clicked, this, [this]() {updateToolButton(m_ui.rampMinToolButton); });
 	connect(m_ui.rampMaxToolButton, &QToolButton::clicked, this, [this]() {updateToolButton(m_ui.rampMaxToolButton); });
@@ -161,6 +164,15 @@ void MultiProperty::updatePhaseDiscipline()
 
 			m_ui.comboPhase->setCurrentIndex(-1);
 		}
+	}
+}
+
+void MultiProperty::onPhaseChange(int index)
+{
+	if (m_ui.comboPhase->currentIndex() != -1)
+	{
+		std::unordered_set<SafePtr<AClippingNode>> clipNodes = getClippingsNodes(m_objects);
+		m_dataDispatcher.sendControl(new control::clippingEdition::SetClippingModeByPhase(clipNodes, m_ui.comboPhase->currentText().toStdWString()));
 	}
 }
 
