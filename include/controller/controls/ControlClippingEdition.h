@@ -113,6 +113,18 @@ namespace control::clippingEdition
         ClippingMode m_mode;
     };
 
+    class SetClippingModeByPhase : public AControl
+    {
+    public:
+        SetClippingModeByPhase(const std::unordered_set<SafePtr<AClippingNode>>& nodes, const std::wstring& phase);
+        void doFunction(Controller& controller) override;
+        ControlType getType() const override;
+
+    private:
+        std::unordered_set<SafePtr<AClippingNode>> m_nodes;
+        std::wstring m_phase;
+    };
+
     class SetDefaultRampValues : public AControl
     {
     public:

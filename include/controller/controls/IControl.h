@@ -294,6 +294,7 @@ enum class ControlType
 	setGridType,
 	setGridValue,
 	setDefaultClipMode,
+	setClippingModeByPhase,
 	setDefaultRampValues,
 
 	activeRamp,
