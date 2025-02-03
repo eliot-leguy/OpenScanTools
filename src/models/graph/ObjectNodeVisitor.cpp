@@ -1368,7 +1368,7 @@ void ObjectNodeVisitor::bakeGraphics(const SafePtr<AGraphNode>& node, const Tran
         Color32 color = pco->getColor();
         pco->uploadUniform(transfoMat, m_uniformSwapIndex);
         if (pco->getScanGuid().isValid())
-            m_bakedPointCloud.push_back({ transfoMat, pco->getScanGuid(), color, pco->getUniform(m_uniformSwapIndex) , pco->getClippable(), pco->ScanData::getPhase(), true});
+            m_bakedPointCloud.push_back({ transfoMat, pco->getScanGuid(), color, pco->getUniform(m_uniformSwapIndex) , pco->getClippable(), pco->getPhase(), true});
         break;
     }
     case ElementType::BeamBendingMeasure:

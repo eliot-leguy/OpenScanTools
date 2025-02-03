@@ -31,7 +31,7 @@ public:
     MarkerDrawData getMarkerDrawData(const glm::dmat4& gTransfo) const;
     void updateMarker();
 
-    using ScanData::getPhase;
+    //using ScanData::getPhase;
     //using Data::getPhase;
 
 protected:

@@ -35,12 +35,10 @@ public:
 	uint32_t getAcquisitionTime() const;
 	const std::wstring getStringAcquisitionTime() const;
 
-	const std::wstring& getPhase() const;
 
 	//Setters
 	void setClippable(bool clippable);
 	void setScanPath(const std::filesystem::path& scanPath);
-	void setPhase(const std::wstring& phase);
 
 
 protected:

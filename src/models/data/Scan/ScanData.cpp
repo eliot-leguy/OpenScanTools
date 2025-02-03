@@ -122,13 +122,3 @@ void ScanData::setClippable(bool clippable)
 {
 	m_clippable = clippable;
 }
-
-const std::wstring& ScanData::getPhase() const 
-{
-	return m_phase;
-}
-
-void ScanData::setPhase(const std::wstring& phase)
-{
-	m_phase = phase;
-}
