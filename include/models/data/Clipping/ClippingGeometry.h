@@ -127,6 +127,7 @@ public:
     virtual ClippingShape getShape() const = 0;
 
 public:
+    std::wstring phase;
     ClippingMode mode;
     glm::dmat4 matRT_inv; // rotation-1 * translation-1
     const glm::dmat4 matRT_inv_store; // rotation-1 * translation-1
