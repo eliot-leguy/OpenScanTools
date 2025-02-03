@@ -7,6 +7,7 @@ enum class ElementType;
 class ControllerContext;
 
 class ClippingData
+
 {
 public:
 	ClippingData(const ClippingData& data);
