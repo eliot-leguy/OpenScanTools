@@ -13,6 +13,7 @@ struct PointCloudDrawData
     Color32 color;
     VkUniformOffset uniform;
     bool clippable;
+    std::wstring phase;
 
     bool isObject;
     // #ClippingAssembly ?
