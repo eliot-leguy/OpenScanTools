@@ -1554,6 +1554,8 @@ void ObjectNodeVisitor::initializeClippingAssemblies(const std::unordered_set<st
 std::unordered_set<std::wstring> ObjectNodeVisitor::collectPhases(const SafePtr<AGraphNode>& root)
 {
     std::unordered_set<std::wstring> phases;
+    Logger::log(LoggerMode::SceneGraphLog) << "Number of phases: " << phases.size() << Logger::endl;
+
     std::function<void(const SafePtr<AGraphNode>&)> collectPhasesRecursively = [&](const SafePtr<AGraphNode>& node) {
         ReadPtr<AGraphNode> rNode = node.cget();
         if (!rNode)
@@ -1565,6 +1567,7 @@ std::unordered_set<std::wstring> ObjectNodeVisitor::collectPhases(const SafePtr<
             std::wstring phase = rClipping->getPhase();
             if (!phase.empty())
             {
+                std::cout << "Phase: " << Utils::to_utf8(phase) << std::endl;
                 phases.insert(phase);
             }
         }
@@ -1574,9 +1577,17 @@ std::unordered_set<std::wstring> ObjectNodeVisitor::collectPhases(const SafePtr<
         {
             collectPhasesRecursively(child);
         }
-        };
+    };
 
     collectPhasesRecursively(root);
+
+    // Log the number of phases and their names
+    Logger::log(LoggerMode::SceneGraphLog) << "Number of phases: " << phases.size() << Logger::endl;
+    for (const auto& phase : phases)
+    {
+        Logger::log(LoggerMode::SceneGraphLog) << "Phase: " << Utils::to_utf8(phase) << Logger::endl;
+    }
+
     return phases;
 }
 

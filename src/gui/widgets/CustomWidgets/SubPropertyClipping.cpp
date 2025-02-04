@@ -26,6 +26,7 @@ SubPropertyClipping::SubPropertyClipping(QWidget *parent, float guiScale)
 	connect(m_ui.group_clip, &QGroupBox::clicked, this, &SubPropertyClipping::onActiveClipping);
 	connect(m_ui.InteriorModeRadioBtn, SIGNAL(pressed()), this, SLOT(onShowInteriorClick()));
 	connect(m_ui.ExteriorModeRadioBtn, SIGNAL(pressed()), this, SLOT(onShowExteriorClick()));
+	connect(m_ui.PhasesToShow, SIGNAL(currentIndexChanged(int)), this, SLOT(onPhaseSelect()));
 	connect(m_ui.lineEdit_minClip, &QLineEdit::editingFinished, this, &SubPropertyClipping::onMinClipDistEdit);
 	connect(m_ui.lineEdit_maxClip, &QLineEdit::editingFinished, this, &SubPropertyClipping::onMaxClipDistEdit);
 
@@ -107,6 +108,7 @@ void SubPropertyClipping::update()
 
 void SubPropertyClipping::updatePhase(SafePtr<AClippingNode>& rObject)
 {
+	std::cout << "Update phase" << std::endl;
 	if (!m_controllerContext)
 		return;
 
@@ -117,8 +119,8 @@ void SubPropertyClipping::updatePhase(SafePtr<AClippingNode>& rObject)
 	phaseDefault = rObject.cget()->getPhase();
 
 	{
-		m_ui.comboBox_phasesToShow->clear();
-		m_ui.comboBox_phasesToShow->addItem(QString::fromStdString("All"));
+		m_ui.PhasesToShow->clear();
+		m_ui.PhasesToShow->addItem(QString::fromStdString("All"));
 		int i = -1;
 		ReadPtr<UserList> rPhase = phaseList.cget();
 		if (rPhase)
@@ -127,13 +129,13 @@ void SubPropertyClipping::updatePhase(SafePtr<AClippingNode>& rObject)
 
 			for (std::wstring phase : rPhase->clist())
 			{
-				m_ui.comboBox_phasesToShow->addItem(QString::fromStdWString(phase));
+				m_ui.PhasesToShow->addItem(QString::fromStdWString(phase));
 				++i;
 				if (phaseDefault == phase)
 					storedId = i;
 			}
 			if (storedId >= 0)
-				m_ui.comboBox_phasesToShow->setCurrentIndex(storedId);
+				m_ui.PhasesToShow->setCurrentIndex(storedId);
 		}
 	}
 }
@@ -161,6 +163,8 @@ void SubPropertyClipping::prepareUi(ElementType type)
 
 	m_ui.InteriorModeRadioBtn->setEnabled(type != ElementType::Grid && m_ui.group_clip->isChecked());
 	m_ui.ExteriorModeRadioBtn->setEnabled(type != ElementType::Grid && m_ui.group_clip->isChecked());
+
+	m_ui.PhasesToShow->setEnabled(type != ElementType::Grid && m_ui.group_clip->isChecked());
 }
 
 void SubPropertyClipping::onShowInteriorClick()
@@ -175,7 +179,8 @@ void SubPropertyClipping::onShowExteriorClick()
 		m_dataDispatcher->sendControl(new control::clippingEdition::SetMode(m_storedClip, ClippingMode::showExterior));
 }
 
-void onPhaseSelect() {
+void SubPropertyClipping::onPhaseSelect()
+{
 	std::cout << "Phase select" << std::endl;
 	//A voir ce qu'on fait ici
 }
