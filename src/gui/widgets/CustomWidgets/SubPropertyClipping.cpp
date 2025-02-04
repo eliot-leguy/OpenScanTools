@@ -116,10 +116,11 @@ void SubPropertyClipping::updatePhase(SafePtr<AClippingNode>& rObject)
 
 	std::wstring phaseDefault = NA_FIELD_NAME.toStdWString();
 
-	phaseDefault = rObject.cget()->getSelectedPhase();
+	phaseDefault = rObject.cget()->getPhase();
 
 	{
 		m_ui.PhasesToShow->clear();
+		m_ui.PhasesToShow->addItem(QString::fromStdString("All"));
 		int i = -1;
 		ReadPtr<UserList> rPhase = phaseList.cget();
 		if (rPhase)
@@ -180,19 +181,8 @@ void SubPropertyClipping::onShowExteriorClick()
 
 void SubPropertyClipping::onPhaseSelect()
 {
-	if (!m_dataDispatcher)
-		return;
-
-	// Récupérer le texte actuellement sélectionné dans la boîte à outils "PhasesToShow"
-	QString selectedPhaseQt = m_ui.PhasesToShow->currentText();
-	std::wstring selectedPhase = selectedPhaseQt.toStdWString();
-
-	// Si "All" est sélectionné, définir la phase par défaut (par exemple, une chaîne vide)
-	/*if (selectedPhase == L"All")
-		selectedPhase = L"";*/
-
-	// Envoyer un contrôle pour définir la phase sélectionnée sur l'objet de clipping
-	m_dataDispatcher->sendControl(new control::clippingEdition::SetSelectedPhase(m_storedClip, selectedPhase));
+	std::cout << "Phase select" << std::endl;
+	//A voir ce qu'on fait ici
 }
 
 void SubPropertyClipping::onActiveClipping()

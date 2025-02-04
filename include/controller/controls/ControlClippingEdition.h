@@ -20,17 +20,12 @@ namespace control::clippingEdition
         SetMode(SafePtr<AClippingNode> toEditData, ClippingMode newMode);
         SetMode(const std::unordered_set<SafePtr<AClippingNode>>& toEditDatas, const ClippingMode& newMode);
 
-        void setPhase(const std::wstring& phase) { m_phase = phase; };
-		std::wstring getPhase() const { return m_phase; };
-
         ~SetMode();
         void doFunction(Controller& controller) override;
         ControlType getType() const override;
 
     private:
         ClippingMode m_mode;
-        std::wstring m_phase;
-		std::wstring m_selectedPhase;
         bool m_filterIsSelected = false;
         bool m_filterIsActive = false;
     };
@@ -118,20 +113,17 @@ namespace control::clippingEdition
         ClippingMode m_mode;
     };
 
-    class SetSelectedPhase : public AControl {
+    class SetClippingModeByPhase : public AControl
+    {
     public:
-        SetSelectedPhase(const SafePtr<AClippingNode>& node, const std::wstring& phase)
-            : m_node(node), m_phase(phase) {
-        };
-        ~SetSelectedPhase();
-
+        SetClippingModeByPhase(const std::unordered_set<SafePtr<AClippingNode>>& nodes, const std::wstring& phase);
         void doFunction(Controller& controller) override;
         ControlType getType() const override;
+
     private:
-        SafePtr<AClippingNode> m_node;
+        std::unordered_set<SafePtr<AClippingNode>> m_nodes;
         std::wstring m_phase;
     };
-
 
     class SetDefaultRampValues : public AControl
     {
