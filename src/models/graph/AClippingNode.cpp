@@ -26,3 +26,13 @@ void AClippingNode::pushRampGeometries(std::vector<std::shared_ptr<IClippingGeom
 	return;
 }
 
+void AClippingNode::setSelectedPhase(const std::wstring& phase)
+{
+	m_phaseSelected = phase;
+}
+
+std::wstring AClippingNode::getSelectedPhase() const
+{
+	return m_phaseSelected;
+}
+

@@ -15,5 +15,10 @@ public:
 
 	virtual void pushClippingGeometries(ClippingAssembly& clipAssembly, const TransformationModule& transfo) const;
 	virtual void pushRampGeometries(std::vector<std::shared_ptr<IClippingGeometry>>& retGeom, const TransformationModule& transfo) const;
+
+	virtual void setSelectedPhase(const std::wstring& phase);
+	virtual std::wstring getSelectedPhase() const;
+private:
+	std::wstring m_phaseSelected=L"";
 };
 #endif

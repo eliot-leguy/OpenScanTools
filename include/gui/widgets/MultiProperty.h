@@ -38,8 +38,6 @@ private:
 
 	void toggleToolButton(QToolButton* button);
 
-	void onPhaseChange(int index);
-
 public slots:
 	void addHyperlink(std::wstring hyperlink, std::wstring name);
 	void handleContextHyperlink(int linkIndex);

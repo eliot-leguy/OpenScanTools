@@ -167,15 +167,6 @@ void MultiProperty::updatePhaseDiscipline()
 	}
 }
 
-void MultiProperty::onPhaseChange(int index)
-{
-	if (m_ui.comboPhase->currentIndex() != -1)
-	{
-		std::unordered_set<SafePtr<AClippingNode>> clipNodes = getClippingsNodes(m_objects);
-		m_dataDispatcher.sendControl(new control::clippingEdition::SetClippingModeByPhase(clipNodes, m_ui.comboPhase->currentText().toStdWString()));
-	}
-}
-
 void MultiProperty::clearFields()
 {
 	bool containScan = false;
