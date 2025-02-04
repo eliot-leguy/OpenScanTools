@@ -25,7 +25,7 @@ PropertyBox::PropertyBox(Controller& controller, QWidget *parent, float guiScale
 
 	m_ui.genericPropsHeadWidget->setControllerInfo(controller);
 	m_ui.genericPropsFeetWidget->setDataDispatcher(controller.getDataDispatcher());
-	m_ui.subPropertyClipping->setDataDispatcher(&controller.getDataDispatcher());
+	m_ui.subPropertyClipping->setControllerInfo(controller);
 
 	m_dataDispatcher.registerObserverOnKey(this, guiDType::renderValueDisplay); 
 	m_dataDispatcher.registerObserverOnKey(this, guiDType::sendAuthorsList);

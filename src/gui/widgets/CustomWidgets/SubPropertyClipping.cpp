@@ -2,6 +2,12 @@
 #include "controller/controls/ControlClippingEdition.h"
 
 #include "models/graph/AClippingNode.h"
+#include <models/application/List.h>
+#include <models/application/Ids.hpp>
+#include <gui/texts/DefaultUserLists.hpp>
+#include "controller/ControllerContext.h"
+#include "controller/Controller.h"
+
 
 void SubPropertyClipping::hideEvent(QHideEvent* event)
 {
@@ -59,6 +65,12 @@ void SubPropertyClipping::setObject(const SafePtr<AClippingNode>& object)
 	update();
 }
 
+void SubPropertyClipping::setControllerInfo(const Controller& controller) {
+	m_controllerContext = &controller.cgetContext() ;
+	m_dataDispatcher = &controller.getDataDispatcher();
+}
+
+
 void SubPropertyClipping::setDataDispatcher(IDataDispatcher* dataDispatcher)
 {
 	m_dataDispatcher = dataDispatcher;
@@ -85,10 +97,47 @@ void SubPropertyClipping::update()
 	m_ui.spinBox_stepsRamp->setValue(rClip->getRampSteps());
 	m_ui.checkBox_clamp->setChecked(rClip->isRampClamped());
 
+	// Initialiser le menu déroulant "Phases to Show"
+	updatePhase(m_storedClip);
+
 	blockSignals(false);
 
 	return;
 }
+
+void SubPropertyClipping::updatePhase(SafePtr<AClippingNode>& rObject)
+{
+	if (!m_controllerContext)
+		return;
+
+	SafePtr<UserList> phaseList = m_controllerContext->getUserList(listId(LIST_PHASE_ID));
+
+	std::wstring phaseDefault = NA_FIELD_NAME.toStdWString();
+
+	phaseDefault = rObject.cget()->getPhase();
+
+	{
+		m_ui.comboBox_phasesToShow->clear();
+		m_ui.comboBox_phasesToShow->addItem(QString::fromStdString("All"));
+		int i = -1;
+		ReadPtr<UserList> rPhase = phaseList.cget();
+		if (rPhase)
+		{
+			int storedId = rPhase->clist().empty() ? -1 : 1;
+
+			for (std::wstring phase : rPhase->clist())
+			{
+				m_ui.comboBox_phasesToShow->addItem(QString::fromStdWString(phase));
+				++i;
+				if (phaseDefault == phase)
+					storedId = i;
+			}
+			if (storedId >= 0)
+				m_ui.comboBox_phasesToShow->setCurrentIndex(storedId);
+		}
+	}
+}
+
 
 void SubPropertyClipping::prepareUi(ElementType type)
 {
@@ -124,6 +173,11 @@ void SubPropertyClipping::onShowExteriorClick()
 {
 	if (m_dataDispatcher)
 		m_dataDispatcher->sendControl(new control::clippingEdition::SetMode(m_storedClip, ClippingMode::showExterior));
+}
+
+void onPhaseSelect() {
+	std::cout << "Phase select" << std::endl;
+	//A voir ce qu'on fait ici
 }
 
 void SubPropertyClipping::onActiveClipping()
