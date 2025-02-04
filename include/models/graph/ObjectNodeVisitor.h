@@ -90,6 +90,9 @@ private:
     //void nextGeoNode(const SafePtr<AGraphNode>& node, const glm::dmat4& parent_transfo);
     //void bakeGraphics(const SafePtr<AGraphNode>& node, const glm::dmat4& gTransfo);
     //void bakeClipping(const SafePtr<AGraphNode>& node, const glm::dmat4& gTransfo);
+    std::unordered_set<std::wstring> collectPhases(const SafePtr<AGraphNode>& root);
+    void initializeClippingAssemblies(const std::unordered_set<std::wstring>& phases);
+
     void nextGeoNode(const SafePtr<AGraphNode>& node, const TransformationModule& parent_transfo);
     void bakeGraphics(const SafePtr<AGraphNode>& node, const TransformationModule& gTransfo);
     void bakeClipping(const SafePtr<AGraphNode>& node, const TransformationModule& gTransfo);
@@ -154,7 +157,8 @@ private:
     std::vector<SegmentDrawData>    m_segmentDrawData;
     std::vector<PointCloudDrawData> m_bakedPointCloud;
     // NOTE - Pour le futur clipping par phase on aura besoin de plusieurs clipping assembly
-    ClippingAssembly m_clippingAssembly;
+	ClippingAssembly				m_clippingAssembly;
+    std::map<std::wstring, ClippingAssembly> m_clippingAssemblies;
     std::vector<ManipDrawData>      m_manipDrawData;
     std::vector<MeshDrawData>       m_meshesDrawData;
 
