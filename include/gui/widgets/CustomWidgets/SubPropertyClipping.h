@@ -35,6 +35,7 @@ private:
 public slots:
 	void onShowInteriorClick();
 	void onShowExteriorClick();
+	void onByPhaseClick();
 	void onPhaseSelect();
 	void onActiveClipping();
 	void onMinClipDistEdit();

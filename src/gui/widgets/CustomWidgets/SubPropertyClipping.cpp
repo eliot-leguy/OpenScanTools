@@ -26,6 +26,8 @@ SubPropertyClipping::SubPropertyClipping(QWidget *parent, float guiScale)
 	connect(m_ui.group_clip, &QGroupBox::clicked, this, &SubPropertyClipping::onActiveClipping);
 	connect(m_ui.InteriorModeRadioBtn, SIGNAL(pressed()), this, SLOT(onShowInteriorClick()));
 	connect(m_ui.ExteriorModeRadioBtn, SIGNAL(pressed()), this, SLOT(onShowExteriorClick()));
+	connect(m_ui.byPhaseModeRadioBtn, SIGNAL(pressed()), this, SLOT(onByPhaseClick()));
+
 	connect(m_ui.PhasesToShow, SIGNAL(currentIndexChanged(int)), this, SLOT(onPhaseSelect()));
 	connect(m_ui.lineEdit_minClip, &QLineEdit::editingFinished, this, &SubPropertyClipping::onMinClipDistEdit);
 	connect(m_ui.lineEdit_maxClip, &QLineEdit::editingFinished, this, &SubPropertyClipping::onMaxClipDistEdit);
@@ -178,6 +180,12 @@ void SubPropertyClipping::onShowExteriorClick()
 		m_dataDispatcher->sendControl(new control::clippingEdition::SetMode(m_storedClip, ClippingMode::showExterior));
 }
 
+void SubPropertyClipping::onByPhaseClick()
+{
+	if (m_dataDispatcher)
+		m_dataDispatcher->sendControl(new control::clippingEdition::SetMode(m_storedClip, ClippingMode::byPhase));
+}
+
 void SubPropertyClipping::onPhaseSelect()
 {
 	if (!m_dataDispatcher)
@@ -188,8 +196,8 @@ void SubPropertyClipping::onPhaseSelect()
 	std::wstring selectedPhase = selectedPhaseQt.toStdWString();
 
 	// Si "All" est sélectionné, définir la phase par défaut (par exemple, une chaîne vide)
-	/*if (selectedPhase == L"All")
-		selectedPhase = L"";*/
+	if (selectedPhase == L"All" || selectedPhase == L"Tous")
+		selectedPhase = L"";
 
 	// Envoyer un contrôle pour définir la phase sélectionnée sur l'objet de clipping
 	m_dataDispatcher->sendControl(new control::clippingEdition::SetSelectedPhase(m_storedClip, selectedPhase));

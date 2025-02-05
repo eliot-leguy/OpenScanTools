@@ -8,8 +8,9 @@ enum class ClippingMode
     showInterior,
     showExterior,
     colorInterior,
+    byPhase,
     Max_Enum,
-    byPhase
+    
 };
 
 // Add ClippingShape ?
