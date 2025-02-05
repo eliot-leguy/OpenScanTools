@@ -2,6 +2,7 @@
 #define CLIPPING_DATA_H
 
 #include "models/data/Clipping/ClippingTypes.h"
+#include <string> 
 
 enum class ElementType;
 class ControllerContext;
@@ -40,7 +41,11 @@ public:
 	int getRampSteps() const;
 	bool isRampClamped() const;
 
+	void setSelectedPhase(const std::wstring& phase);
+	std::wstring getSelectedPhase() const;
+
 protected:
+	std::wstring m_phaseSelected = L"";
 	ClippingMode m_clippingMode = ClippingMode::showInterior;
 	bool m_clippingActive = false;
 	float m_minClipDist = 0.f;
@@ -51,6 +56,7 @@ protected:
 	float m_rampMax = 1.f;
 	int m_rampSteps = 8; // max = 240
 	bool m_rampClamped = false; // only for the box
+
 };
 
 #endif

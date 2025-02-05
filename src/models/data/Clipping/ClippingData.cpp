@@ -127,3 +127,13 @@ bool ClippingData::isRampClamped() const
 {
     return m_rampClamped;
 }
+
+void ClippingData::setSelectedPhase(const std::wstring& phase)
+{
+    m_phaseSelected = phase;
+}
+
+std::wstring ClippingData::getSelectedPhase() const
+{
+    return m_phaseSelected;
+}
