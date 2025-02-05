@@ -2070,17 +2070,17 @@ Perspective</translation>
 <context>
     <name>E57TreeWidget</name>
     <message>
-        <location filename="../../src/gui/widgets/E57TreeWidget.cpp" line="14"/>
+        <location filename="../../src/gui/widgets/E57TreeWidget.cpp" line="12"/>
         <source>Name</source>
         <translation>Nom</translation>
     </message>
     <message>
-        <location filename="../../src/gui/widgets/E57TreeWidget.cpp" line="14"/>
+        <location filename="../../src/gui/widgets/E57TreeWidget.cpp" line="12"/>
         <source>Type</source>
         <translation>Type</translation>
     </message>
     <message>
-        <location filename="../../src/gui/widgets/E57TreeWidget.cpp" line="14"/>
+        <location filename="../../src/gui/widgets/E57TreeWidget.cpp" line="12"/>
         <source>Content</source>
         <translation>Contenu</translation>
     </message>
@@ -2488,12 +2488,12 @@ Veuillez spécifier le dossier parent de ces fichiers. (Ces fichiers vont être 
         <translation>Pas</translation>
     </message>
     <message>
-        <location filename="../../src/gui/widgets/PropertyBox.cpp" line="124"/>
+        <location filename="../../src/gui/widgets/PropertyBox.cpp" line="122"/>
         <source>Expand to grid</source>
         <translation>Etendre en grille</translation>
     </message>
     <message>
-        <location filename="../../src/gui/widgets/PropertyBox.cpp" line="129"/>
+        <location filename="../../src/gui/widgets/PropertyBox.cpp" line="127"/>
         <source>Downcast to box</source>
         <translation>Revenir à une box simple</translation>
     </message>
@@ -2961,12 +2961,12 @@ Veuillez spécifier le dossier parent de ces fichiers. (Ces fichiers vont être 
 <context>
     <name>PropertyPointCloud</name>
     <message>
-        <location filename="../../src/gui/widgets/PropertyPointCloud.cpp" line="14"/>
+        <location filename="../../src/gui/widgets/PropertyPointCloud.cpp" line="10"/>
         <source>Scan properties</source>
         <translation>Propriétés du scan</translation>
     </message>
     <message>
-        <location filename="../../src/gui/widgets/PropertyPointCloud.cpp" line="15"/>
+        <location filename="../../src/gui/widgets/PropertyPointCloud.cpp" line="11"/>
         <source>Point Cloud Object properties</source>
         <translation>Propriétés d&apos;objet nuage de points</translation>
     </message>
@@ -3370,12 +3370,12 @@ Veuillez spécifier le dossier parent de ces fichiers. (Ces fichiers vont être 
         <translation>Annuler</translation>
     </message>
     <message>
-        <location filename="../../src/gui/widgets/PropertyUserOrientation.cpp" line="313"/>
+        <location filename="../../src/gui/widgets/PropertyUserOrientation.cpp" line="309"/>
         <source>axis</source>
         <translation>axe</translation>
     </message>
     <message>
-        <location filename="../../src/gui/widgets/PropertyUserOrientation.cpp" line="352"/>
+        <location filename="../../src/gui/widgets/PropertyUserOrientation.cpp" line="348"/>
         <source>custom axis</source>
         <translation>axe personnalisé</translation>
     </message>
@@ -8159,7 +8159,7 @@ Attention : vous ne pouvez pas annuler cette action.</translation>
         <translation>axe vertical</translation>
     </message>
     <message>
-        <location filename="../../src/pointCloudEngine/RenderingEngine.cpp" line="45"/>
+        <location filename="../../src/pointCloudEngine/RenderingEngine.cpp" line="33"/>
         <source>Grid cell size : %1 %2</source>
         <translation>Taille des cellulles : %1 %2</translation>
     </message>
@@ -8319,12 +8319,12 @@ Attention : vous ne pouvez pas annuler cette action.</translation>
 <context>
     <name>SubPropertyClipping</name>
     <message>
-        <location filename="../../src/gui/forms/SubProperty_Clipping.ui" line="213"/>
+        <location filename="../../src/gui/forms/SubProperty_Clipping.ui" line="233"/>
         <source>Show interior</source>
         <translation>Montrer intérieur</translation>
     </message>
     <message>
-        <location filename="../../src/gui/forms/SubProperty_Clipping.ui" line="200"/>
+        <location filename="../../src/gui/forms/SubProperty_Clipping.ui" line="249"/>
         <source>Show exterior</source>
         <translation>Montrer extérieur</translation>
     </message>
@@ -8335,13 +8335,13 @@ Attention : vous ne pouvez pas annuler cette action.</translation>
     </message>
     <message>
         <location filename="../../src/gui/forms/SubProperty_Clipping.ui" line="77"/>
-        <location filename="../../src/gui/forms/SubProperty_Clipping.ui" line="184"/>
+        <location filename="../../src/gui/forms/SubProperty_Clipping.ui" line="197"/>
         <source>Min</source>
         <translation></translation>
     </message>
     <message>
         <location filename="../../src/gui/forms/SubProperty_Clipping.ui" line="94"/>
-        <location filename="../../src/gui/forms/SubProperty_Clipping.ui" line="236"/>
+        <location filename="../../src/gui/forms/SubProperty_Clipping.ui" line="207"/>
         <source>Max</source>
         <translation></translation>
     </message>
@@ -8359,6 +8359,11 @@ Attention : vous ne pouvez pas annuler cette action.</translation>
         <location filename="../../src/gui/forms/SubProperty_Clipping.ui" line="160"/>
         <source>Clipping</source>
         <translation>Clipping</translation>
+    </message>
+    <message>
+        <location filename="../../src/gui/forms/SubProperty_Clipping.ui" line="217"/>
+        <source>Show by phase</source>
+        <translation>Montrer par phase</translation>
     </message>
 </context>
 <context>
