@@ -1582,40 +1582,58 @@ std::unordered_set<std::wstring> ObjectNodeVisitor::collectPhases(const SafePtr<
     return phases;
 }
 
-void ObjectNodeVisitor::bakeClipping(const SafePtr<AGraphNode>& node, const TransformationModule& gTransfo)
-{
-    ReadPtr<AClippingNode> rClipping = static_read_cast<AClippingNode>(node);
+void ObjectNodeVisitor::bakeClipping(const SafePtr<AGraphNode>& node, const TransformationModule& gTransfo) {
+    WritePtr<AClippingNode> rClipping = static_write_cast<AClippingNode>(node);
     if (!rClipping)
         return;
 
     std::wstring phase = rClipping->getSelectedPhase();
-    if (phase.empty())
-    {
-        for (auto& [key, clippingAssembly] : m_clippingAssemblies)
-        {
-            if (rClipping->isClippingActive())
-            {
-                rClipping->pushClippingGeometries(clippingAssembly, gTransfo);
+    
+
+    if (rClipping->getClippingMode() == ClippingMode::byPhase) {
+        for (auto& [key, clippingAssembly] : m_clippingAssemblies) {
+            if (key == phase) {
+                rClipping->setClippingMode(ClippingMode::showInterior);
+                if (rClipping->isClippingActive()) {
+                    rClipping->pushClippingGeometries(clippingAssembly, gTransfo);
+                }
+                if (rClipping->isRampActive()) {
+                    rClipping->pushRampGeometries(clippingAssembly.rampActives, gTransfo);
+                }
             }
-            if (rClipping->isRampActive())
-            {
-                rClipping->pushRampGeometries(clippingAssembly.rampActives, gTransfo);
+            else {
+                rClipping->setClippingMode(ClippingMode::showExterior);
+                if (rClipping->isClippingActive()) {
+                    rClipping->pushClippingGeometries(clippingAssembly, gTransfo);
+                }
+                if (rClipping->isRampActive()) {
+                    rClipping->pushRampGeometries(clippingAssembly.rampActives, gTransfo);
+                }
             }
         }
+        rClipping->setClippingMode(ClippingMode::byPhase);
     }
-    else
-    {
-        auto it = m_clippingAssemblies.find(phase);
-        if (it != m_clippingAssemblies.end())
-        {
-            ClippingAssembly& clippingAssembly = it->second;
-            if (rClipping->isClippingActive())
-            {
-                rClipping->pushClippingGeometries(clippingAssembly, gTransfo);
+    else {
+        if (phase.empty()) {
+            for (auto& [key, clippingAssembly] : m_clippingAssemblies) {
+                if (rClipping->isClippingActive()) {
+                    rClipping->pushClippingGeometries(clippingAssembly, gTransfo);
+                }
+                if (rClipping->isRampActive()) {
+                    rClipping->pushRampGeometries(clippingAssembly.rampActives, gTransfo);
+                }
             }
-            if (rClipping->isRampActive())
-            {
-                rClipping->pushRampGeometries(clippingAssembly.rampActives, gTransfo);
+        }
+        else {
+            auto it = m_clippingAssemblies.find(phase);
+            if (it != m_clippingAssemblies.end()) {
+                ClippingAssembly& clippingAssembly = it->second;
+                if (rClipping->isClippingActive()) {
+                    rClipping->pushClippingGeometries(clippingAssembly, gTransfo);
+                }
+                if (rClipping->isRampActive()) {
+                    rClipping->pushRampGeometries(clippingAssembly.rampActives, gTransfo);
+                }
             }
         }
     }
