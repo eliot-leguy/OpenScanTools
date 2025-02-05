@@ -278,26 +278,6 @@ namespace control::clippingEdition
         return ControlType::setDefaultClipMode;
     }
 
-    SetClippingModeByPhase::SetClippingModeByPhase(const std::unordered_set<SafePtr<AClippingNode>>& nodes, const std::wstring& phase)
-        : m_nodes(nodes), m_phase(phase)
-    {
-    }
-
-    void SetClippingModeByPhase::doFunction(Controller& controller)
-    {
-        for (const auto& node : m_nodes)
-        {
-            node.get()->setClippingMode(ClippingMode::byPhase);
-            node.get()->setPhase(m_phase);
-        }
-    }
-
-    ControlType SetClippingModeByPhase::getType() const
-    {
-        return ControlType::setClippingModeByPhase;
-    }
-
-
     /*
     ** SetDefaultRampValues
     */
@@ -459,5 +439,20 @@ namespace control::clippingEdition
     ControlType SetRampClamped::getType() const
     {
         return ControlType::setRampClamped;
+    }
+    SetSelectedPhase::~SetSelectedPhase()
+    {
+    }
+    void SetSelectedPhase::doFunction(Controller& controller)
+    {
+		if (auto node = m_node)
+		{
+			std::cout << "SetSelectedPhase::doFunction" << std::endl;
+			node.get()->setSelectedPhase(m_phase);
+		}
+    }
+    ControlType SetSelectedPhase::getType() const
+    {
+        return ControlType::setSeletedPhase;
     }
 }
