@@ -11,6 +11,7 @@
 #include "models/graph/TransformationModule.h"
 
 #include "utils/safe_ptr.h"
+#include <unordered_set>
 
 #include "vulkan/VkUniform.h"
 
@@ -41,7 +42,45 @@ enum class NavigationMode;
 
 class ObjectNodeVisitor
 {
+public:
+    ObjectNodeVisitor(GraphManager& graph, VkExtent2D fbExtent, const float& guiScale, const CameraNode& camera);
+    ~ObjectNodeVisitor();
+
+    uint32_t getTextHoveredId() const;
+    uint64_t getFrameHash() const;
+
+    // ***** Setters ***** //
+    void setCamera(const CameraNode& camera);
+    void setLastMousePosition(const glm::ivec2& mousePos);
+    void setDecimationRatio(float ratio);
+    void setComplementaryRenderParameters(uint32_t swapIndex, VkFormat pointRenderFormat);
+    void activateLogPerWorkload(bool octree, bool objects);
+
+    // ***** Bake Graph ***** //
+    void bakeGraph(SafePtr<AGraphNode> root); // bake all graphic datas from the graph
+  
+    // ***** Draw commands for each object type ***** //
+    void drawImGuiBegin(SafePtr<AGraphNode> startNode, VkCommandBuffer cmdBuffer);
+    void drawRampOverlay();
+    void drawImGuiStats(VulkanViewport& viewport);
+    void drawImGuiEnd(VkCommandBuffer cmdBuffer);
+
+    void draw_baked_pointClouds(VkCommandBuffer cmdBuffer, Renderer& renderer);
+    void draw_baked_manipulators(VkCommandBuffer cmdBuffer, ManipulatorRenderer& renderer, double manipSize);
+    void drawGizmo(VkCommandBuffer cmdBuffer, const glm::dvec3& gizmoParameters, std::shared_ptr<MeshBuffer> mesh, ManipulatorRenderer& renderer);
+    void draw_baked_markers(VkCommandBuffer cmdBuf, MarkerRenderer& renderer, const std::vector<MarkerDrawData>& target, VkDescriptorSet inputAttachDescSet, SimpleBuffer& markerBuffer);
+    void draw_baked_measures(VkCommandBuffer cmdBuffer, MeasureRenderer& renderer, SimpleBuffer& segmentBuffer);
+    void draw_baked_meshes(VkCommandBuffer cmdBuffer, SimpleObjectRenderer& renderer, bool transparentPass);
+    void blendTransparentPass(VkCommandBuffer cmdBuffer, SimpleObjectRenderer& renderer, VkDescriptorSet inputTransparentLayerDescSet);
+
+    // ***** Miscellaneous ***** //
+    bool isPointCloudMissingPart() const;
+    
+    // Statistics
+    void getDrawCount(uint64_t& pointsDrawn, uint64_t& cellsDrawn);
+
 private:
+
     struct ManipDrawData
     {
         //glm::dmat4 transfo;
@@ -64,55 +103,6 @@ private:
         uint32_t graphicId;
     };
 
-public:
-    ObjectNodeVisitor(GraphManager& graph, VkExtent2D fbExtent, const float& guiScale, const CameraNode& camera);
-    ~ObjectNodeVisitor();
-
-    uint32_t getTextHoveredId() const;
-    uint64_t getFrameHash() const;
-
-    // ***** Setters ***** //
-    void setCamera(const CameraNode& camera);
-    void setLastMousePosition(const glm::ivec2& mousePos);
-    void setDecimationRatio(float ratio);
-    void setComplementaryRenderParameters(uint32_t swapIndex, VkFormat pointRenderFormat);
-    void activateLogPerWorkload(bool octree, bool objects);
-
-    // ***** Bake Graph ***** //
-    void bakeGraph(SafePtr<AGraphNode> root); // bake all graphic datas from the graph
-private:
-    //void nextGeoNode(const SafePtr<AGraphNode>& node, const glm::dmat4& parent_transfo);
-    //void bakeGraphics(const SafePtr<AGraphNode>& node, const glm::dmat4& gTransfo);
-    //void bakeClipping(const SafePtr<AGraphNode>& node, const glm::dmat4& gTransfo);
-    std::unordered_set<std::wstring> collectPhases(const SafePtr<AGraphNode>& root);
-    void initializeClippingAssemblies(const std::unordered_set<std::wstring>& phases);
-
-    void nextGeoNode(const SafePtr<AGraphNode>& node, const TransformationModule& parent_transfo);
-    void bakeGraphics(const SafePtr<AGraphNode>& node, const TransformationModule& gTransfo);
-    void bakeClipping(const SafePtr<AGraphNode>& node, const TransformationModule& gTransfo);
-
-public:
-    // ***** Draw commands for each object type ***** //
-    void drawImGuiBegin(SafePtr<AGraphNode> startNode, VkCommandBuffer cmdBuffer);
-    void drawRampOverlay();
-    void drawImGuiStats(VulkanViewport& viewport);
-    void drawImGuiEnd(VkCommandBuffer cmdBuffer);
-
-    void draw_baked_pointClouds(VkCommandBuffer cmdBuffer, Renderer& renderer);
-    void draw_baked_manipulators(VkCommandBuffer cmdBuffer, ManipulatorRenderer& renderer, double manipSize);
-    void drawGizmo(VkCommandBuffer cmdBuffer, const glm::dvec3& gizmoParameters, std::shared_ptr<MeshBuffer> mesh, ManipulatorRenderer& renderer);
-    void draw_baked_markers(VkCommandBuffer cmdBuf, MarkerRenderer& renderer, const std::vector<MarkerDrawData>& target, VkDescriptorSet inputAttachDescSet, SimpleBuffer& markerBuffer);
-    void draw_baked_measures(VkCommandBuffer cmdBuffer, MeasureRenderer& renderer, SimpleBuffer& segmentBuffer);
-    void draw_baked_meshes(VkCommandBuffer cmdBuffer, SimpleObjectRenderer& renderer, bool transparentPass);
-    void blendTransparentPass(VkCommandBuffer cmdBuffer, SimpleObjectRenderer& renderer, VkDescriptorSet inputTransparentLayerDescSet);
-
-    // ***** Miscellaneous ***** //
-    bool isPointCloudMissingPart() const;
-    
-    // Statistics
-    void getDrawCount(uint64_t& pointsDrawn, uint64_t& cellsDrawn);
-
-private:
     void initTextsFormat();
     bool drawCamera(const VkCommandBuffer& cmdBuffer, const SafePtr<CameraNode>& camera);
     void drawManipulator(VkCommandBuffer cmdBuffer, ManipulatorRenderer& renderer, const TransformationModule& transfo, const SafePtr<ManipulatorNode>& manip, double manipSize);
@@ -130,7 +120,16 @@ private:
 
     std::string formatNumber(double num);
 
-private:
+    //void nextGeoNode(const SafePtr<AGraphNode>& node, const glm::dmat4& parent_transfo);
+    //void bakeGraphics(const SafePtr<AGraphNode>& node, const glm::dmat4& gTransfo);
+    //void bakeClipping(const SafePtr<AGraphNode>& node, const glm::dmat4& gTransfo);
+    std::unordered_set<std::wstring> collectPhases(const SafePtr<AGraphNode>& root);
+    void initializeClippingAssemblies(const std::unordered_set<std::wstring>& phases);
+
+    void nextGeoNode(const SafePtr<AGraphNode>& node, const TransformationModule& parent_transfo);
+    void bakeGraphics(const SafePtr<AGraphNode>& node, const TransformationModule& gTransfo);
+    void bakeClipping(const SafePtr<AGraphNode>& node, const TransformationModule& gTransfo);
+
     // Scene geometric parameters
     glm::dmat4 m_viewMatrix;
     glm::dvec3 m_cameraPosition;

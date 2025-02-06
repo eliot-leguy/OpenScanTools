@@ -6,6 +6,7 @@
 #include <vector>
 #include <memory>
 #include <glm/glm.hpp>
+#include <string>
 
 // Notes sur le design des classes "ClippingGeometry"
 // 
@@ -125,7 +126,6 @@ public:
     */
     virtual ClippingShape getShape() const = 0;
 
-public:
     std::wstring phase;
     ClippingMode mode;
     glm::dmat4 matRT_inv; // rotation-1 * translation-1
