@@ -10,9 +10,9 @@
 // Enhanced Point Exploration Engine - EPEE
 //*******************************************************
 
-#include "models/pointCloud/tls.h"
+#include "tls_def.h"
 
-#include "stdint.h"
+//#include "stdint.h"
 #include <filesystem>
 
 //******* Notes on how to use a TlScan***********
@@ -46,8 +46,6 @@ bool tlGetScanHeader(tls::ScanGuid scanGuid, tls::ScanHeader &scanHeader);
 bool tlGetCurrentScanPath(tls::ScanGuid scanGuid, std::filesystem::path& currentPath);
 
 bool tlScanLeftToFree();
-
-std::list<tls::ScanHeader> tlScansHeaders();
 
 class TlStreamLock
 {

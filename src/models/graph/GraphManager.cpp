@@ -5,22 +5,14 @@
 #include "gui/GuiData/GuiData3dObjects.h"
 #include "gui/GuiData/GuiDataGeneralProject.h"
 #include "gui/GuiData/GuiDataRendering.h"
-#include "gui/GuiData/GuiDataMessages.h"
-#include "vulkan/Graph/MemoryReturnCode.h"
 
 #include "models/graph/ScanNode.h"
-#include "models/graph/ScanObjectNode.h"
 #include "models/graph/TagNode.h"
 #include "models/graph/TorusNode.h"
 #include "models/graph/MeshObjectNode.h"
 #include "models/graph/ClusterNode.h"
 #include "models/graph/BoxNode.h"
-#include "models/graph/PolylineMeasureNode.h"
 #include "models/graph/CameraNode.h"
-
-#include "controller/controls/ControlObject3DEdition.h"
-#include "controller/controls/ControlFunction.h"
-
 #include "models/project/ProjectTypes.h"
 
 #include "gui/texts/TreePanelTexts.hpp"
@@ -687,7 +679,12 @@ BoundingBoxD GraphManager::getScanBoundingBox(ObjectStatusFilter status) const
 
 	for (const tls::PointCloudInstance inst : pc_instances)
 	{
-		project_bbox.extend(inst.header.bbox.transform(inst.transfo.getTransformation()));
+		const tls::Limits& limits = inst.header.limits;
+		BoundingBoxD scan_bbox{ limits.xMin, limits.xMax,
+								limits.yMin, limits.yMax,
+								limits.zMin, limits.zMax };
+
+		project_bbox.extend(scan_bbox.transform(inst.transfo.getTransformation()));
 	}
 	return project_bbox;
 }

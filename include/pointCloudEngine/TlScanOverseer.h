@@ -8,14 +8,13 @@
 #include <atomic>
 #include <set>
 
-#include "models/pointCloud/TLS.h"
+#include "tls_def.h"
 #include "models/pointCloud/PointCloudInstance.h"
 #include "pointCloudEngine/PCE_stream.h"
 #include "models/data/clipping/ClippingGeometry.h"
 #include "models/graph/TransformationModule.h"
 #include "models/3d/Measures.h"
 
-#include "models/OpenScanToolsModelEssentials.h"
 #include "pointCloudEngine/OctreeRayTracing.h"
 
 /*
@@ -197,8 +196,6 @@ public:
     void haltStream();
     void resumeStream();
     void streamScans(uint64_t maxSize, char* stagingBuffer, std::vector<TlStagedTransferInfo>& vkTransfer);
-
-    std::list<tls::ScanHeader> getScansHeaders() const;
 
     // Compute
 #ifndef PORTABLE

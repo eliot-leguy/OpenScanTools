@@ -1,13 +1,10 @@
 #ifndef OCTREE_BASE_H
 #define OCTREE_BASE_H
 
-#include "models/pointCloud/TLS.h"
-#include "models/pointCloud/PointXYZIRGB.h"
-#include "io/imports/TlsReader.h"
+#include "tls_def.h"
 
 #include <cstdint>
 #include <vector>
-#include <utility>
 
 // TODO - Take in account or remove the memory allocation exception in close()
 
@@ -22,7 +19,7 @@ const uint32_t MAX_SPT_DEPTH = 16;
 #define NO_CHILD (uint32_t) 0xF00DBEEF
 
 
-// Sizeof TreeCell = 140
+// Sizeof TreeCell = 144(140)
 struct TreeCell
 {   //                      Used in OctreeRayTracing
     uint32_t m_depthSPT;    //  yes (for point count)
@@ -96,38 +93,51 @@ struct Leaf
     uint32_t m_pointCount;
 };
 */
-
-class OctreeBase
+namespace tls
 {
-public:
-    OctreeBase();
-    OctreeBase(const tls::PrecisionType& _precision, const tls::PointFormat& ptFormat);
-    ~OctreeBase() {};
+    class ImageFile_p;
+    class ImagePointCloud_p;
 
-    tls::PointFormat getPointFormat() const;
-    void setPointFormat(tls::PointFormat format);
+    class OctreeBase
+    {
+    public:
+        OctreeBase();
+        OctreeBase(const PrecisionType& _precision, const PointFormat& ptFormat);
+        ~OctreeBase();
 
-	const std::vector<TreeCell>& getData() const;
-	int64_t getCellCount() const;
-	uint64_t getPointCount() const;
+        PointFormat getPointFormat() const;
+        void setPointFormat(PointFormat format);
 
+        const std::vector<TreeCell>& getData() const;
+        int64_t getCellCount() const;
+        uint64_t getPointCount() const;
+        const tls::Limits& getLimits() const;
 
-    TLS_READER_DECLARE(OctreeBase);
+        friend ImageFile_p;
+        //friend bool tls::ImagePointCloud::loadOctreeBase(std::fstream&);
+        friend ImagePointCloud_p;
 
-protected:
-    const tls::PrecisionType m_precisionType;
-    float m_precisionValue;
-    tls::PointFormat m_ptFormat;
+    protected:
+        const tls::PrecisionType m_precisionType;
+        float m_precisionValue;
+        tls::PointFormat m_ptFormat;
 
-    float m_rootSize;
-    float m_rootPosition[3];
-    float m_maxLeafSize;
-    float m_minLeafSize;
+        float m_rootSize;
+        float m_rootPosition[3];
+        float m_maxLeafSize;
+        float m_minLeafSize;
+        tls::Limits m_limits;
 
-    uint64_t m_pointCount;
-    uint32_t m_cellCount;
-    uint32_t m_uRootCell;
-    std::vector<TreeCell> m_vTreeCells;
-};
+        char* m_vertexData = nullptr;
+        size_t m_vertexDataSize = 0;
+        char* m_instData = nullptr;
+        size_t m_instDataSize = 0;
+
+        uint64_t m_pointCount;
+        uint32_t m_cellCount;
+        uint32_t m_uRootCell;
+        std::vector<TreeCell> m_vTreeCells;
+    };
+}
 
 #endif  // !OCTREE_BASE_H

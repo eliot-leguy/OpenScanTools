@@ -2,7 +2,6 @@
 #include "models/pointCloud/PointXYZIRGB.h"
 #include "utils/time.h"
 #include "utils/logger.h"
-#include "utils/math/trigo.h"
 
 // SDK Autodesk ReCap
 #include <data/RCScan.h>
@@ -77,7 +76,6 @@ void RcsFileReader::initHeaders()
 
     // Scan Header (the real infos)
     m_scanHeader.guid = xg::Guid(m_rcScan->getScanId().getString());
-    m_scanHeader.version = tls::ScanVersion::SCAN_V_0_4;
     m_scanHeader.acquisitionDate = 0; // no date
     m_scanHeader.name = m_rcScan->getName();
     m_scanHeader.sensorModel = m_rcScan->getScanProvider();
@@ -88,22 +86,15 @@ void RcsFileReader::initHeaders()
     if (result)
     {
         auto rcQuat = rcTransfo.getRotation().toQuaternion();
-        m_scanHeader.transfo.quaternion[0] = rcQuat.values.x;
-        m_scanHeader.transfo.quaternion[1] = rcQuat.values.y;
-        m_scanHeader.transfo.quaternion[2] = rcQuat.values.z;
-        m_scanHeader.transfo.quaternion[3] = rcQuat.values.w;
+        transfo_.setRotation(glm::dquat(rcQuat.values.w, rcQuat.values.x, rcQuat.values.y, rcQuat.values.z));
         const auto& tr = rcTransfo.getTranslation();
-        m_scanHeader.transfo.translation[0] = tr.x;
-        m_scanHeader.transfo.translation[1] = tr.y;
-        m_scanHeader.transfo.translation[2] = tr.z;
+        transfo_.setPosition(glm::dvec3(tr.x, tr.y, tr.z));
     }
-    else
-        m_scanHeader.transfo = { { 0.0, 0.0, 0.0, 1.0 }, { 0.0, 0.0, 0.0 } };
 
     auto rcbbox = m_rcScan->getBoundingBox();
     const auto& bboxMin = rcbbox.getMin();
     const auto& bboxMax = rcbbox.getMax();
-    m_scanHeader.bbox = { (float)bboxMin.x, (float)bboxMax.x,
+    m_scanHeader.limits = { (float)bboxMin.x, (float)bboxMax.x,
         (float)bboxMin.y, (float)bboxMax.y,
         (float)bboxMin.z, (float)bboxMax.z };
     m_scanHeader.pointCount = m_rcScan->getNumberOfPoints();
@@ -143,7 +134,7 @@ uint64_t RcsFileReader::getTotalPoints() const
     return m_pointCount;
 }
 
-const tls::FileHeader& RcsFileReader::getTlsHeader() const
+tls::FileHeader RcsFileReader::getTlsHeader() const
 {
     return m_fileHeader;
 }
@@ -167,7 +158,7 @@ bool RcsFileReader::readPoints(PointXYZIRGB* dstBuf, uint64_t bufSize, uint64_t&
     settings.setDensity(-1.0); // highest density
     settings.setIsVisiblePointsOnly(true);
 
-    glm::dmat4 invTransfo = tls::math::getInverseTransformDMatrix(m_scanHeader.transfo.translation, m_scanHeader.transfo.quaternion);
+    glm::dmat4 inv_transfo = transfo_.getInverseTransformation();
 
     // Method Point by Point
     {
@@ -184,7 +175,7 @@ bool RcsFileReader::readPoints(PointXYZIRGB* dstBuf, uint64_t bufSize, uint64_t&
             auto& pt = itPt->getPoint();
             auto& pos = pt.getPosition();
 
-            glm::dvec4 glPos = invTransfo * glm::dvec4(pos.x, pos.y, pos.z, 1.0);
+            glm::dvec4 glPos = inv_transfo * glm::dvec4(pos.x, pos.y, pos.z, 1.0);
 
             dstBuf[localIndex].x = (float)(glPos.x);
             dstBuf[localIndex].y = (float)(glPos.y);

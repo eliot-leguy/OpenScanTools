@@ -1,7 +1,7 @@
 #ifndef SCANDATA_H_
 #define SCANDATA_H_
 
-#include "models/pointCloud/TLS.h"
+#include "tls_def.h"
 
 #include <filesystem>
 
@@ -32,7 +32,7 @@ public:
 
 	const std::wstring& getSensorModel() const;
 	const std::wstring& getSensorSerialNumber() const;
-	uint32_t getAcquisitionTime() const;
+	time_t getAcquisitionTime() const;
 	const std::wstring getStringAcquisitionTime() const;
 
 

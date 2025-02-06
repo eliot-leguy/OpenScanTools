@@ -1,8 +1,8 @@
 #ifndef RENDERING_TYPES_H
 #define RENDERING_TYPES_H
 
+#include <string>
 #include <unordered_map>
-#include <glm/glm.hpp>
 
 // RenderColorInput
 enum class UiRenderMode

@@ -1,19 +1,16 @@
-#include "pointCloudEngine/OctreeCtor.h"
+#include "OctreeCtor.h"
 
 #include <chrono>
-#include <limits>
 
 //--- Constructors ---//
 
-OctreeCtor::OctreeCtor(const tls::PrecisionType& _precisionType, const tls::PointFormat& _ptFormat)
+using namespace tls;
+
+OctreeCtor::OctreeCtor(tls::PrecisionType _precisionType, tls::PointFormat _ptFormat)
     : OctreeBase(_precisionType, _ptFormat)
-    , m_vertexData(nullptr)
-    , m_instData(nullptr)
     , m_octreeDepth(0)
     , m_nbDiscardedPoints(0)
     , m_redundantPointCount(0)
-    , m_vertexDataSize(0)
-    , m_bbox{ std::numeric_limits<float>::infinity(), - std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), - std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), - std::numeric_limits<float>::infinity() }
 {
     // Create the root with a center at (0, 0, 0) and the maximum size of a leaf
 
@@ -27,15 +24,11 @@ OctreeCtor::OctreeCtor(const tls::PrecisionType& _precisionType, const tls::Poin
     m_uRootCell = 0;
 }
 
-OctreeCtor::OctreeCtor(OctreeBase const& _base, BoundingBox const& _bbox)
+OctreeCtor::OctreeCtor(OctreeBase const& _base)
     : OctreeBase(_base)
-    , m_vertexData(nullptr)
-    , m_instData(nullptr)
     , m_octreeDepth(0)
     , m_nbDiscardedPoints(0)
     , m_redundantPointCount(0)
-    , m_vertexDataSize(0)
-    , m_bbox(_bbox)
 {
     m_vTempData.resize(m_cellCount);
 }
@@ -44,8 +37,6 @@ OctreeCtor::OctreeCtor(OctreeBase const& _base, BoundingBox const& _bbox)
 
 OctreeCtor::~OctreeCtor()
 {
-    delete[] m_vertexData;
-    delete[] m_instData;
     for (unsigned i = 0; i < m_vTempData.size(); i++) {
         // m_inPoints.clear();
         delete[] m_vTempData[i].m_outPoints;
@@ -56,7 +47,7 @@ OctreeCtor::~OctreeCtor()
 
 //--- Functions ---//
 
-void OctreeCtor::insertPoint(PointXYZIRGB const& _point)
+void OctreeCtor::insertPoint(Point const& _point)
 {
     if (_point.x == 0.f && _point.y == 0.f && _point.z == 0.f)
     {
@@ -66,12 +57,12 @@ void OctreeCtor::insertPoint(PointXYZIRGB const& _point)
 
     // Test the bounding box
     {
-        if (_point.x < m_bbox.xMin) m_bbox.xMin = _point.x;
-        if (_point.x > m_bbox.xMax) m_bbox.xMax = _point.x;
-        if (_point.y < m_bbox.yMin) m_bbox.yMin = _point.y;
-        if (_point.y > m_bbox.yMax) m_bbox.yMax = _point.y;
-        if (_point.z < m_bbox.zMin) m_bbox.zMin = _point.z;
-        if (_point.z > m_bbox.zMax) m_bbox.zMax = _point.z;
+        if (_point.x < m_limits.xMin) m_limits.xMin = _point.x;
+        if (_point.x > m_limits.xMax) m_limits.xMax = _point.x;
+        if (_point.y < m_limits.yMin) m_limits.yMin = _point.y;
+        if (_point.y > m_limits.yMax) m_limits.yMax = _point.y;
+        if (_point.z < m_limits.zMin) m_limits.zMin = _point.z;
+        if (_point.z > m_limits.zMax) m_limits.zMax = _point.z;
     }
 
     // Test if the point is inside root node
@@ -126,16 +117,16 @@ void OctreeCtor::insertPoint(PointXYZIRGB const& _point)
     }
 }
 
-void OctreeCtor::insertPoint_overwriteI(PointXYZIRGB const& _point)
+void OctreeCtor::insertPoint_overwriteI(Point const& _point)
 {
-    PointXYZIRGB newPt = _point;
+    Point newPt = _point;
     newPt.i = (_point.r + _point.g + _point.b) / 3;
     insertPoint(newPt);
 }
 
-void OctreeCtor::insertPoint_overwriteRGB(PointXYZIRGB const& _point)
+void OctreeCtor::insertPoint_overwriteRGB(Point const& _point)
 {
-    PointXYZIRGB newPt = _point;
+    Point newPt = _point;
     newPt.r = _point.i;
     newPt.g = _point.i;
     newPt.b = _point.i;
@@ -149,14 +140,14 @@ void OctreeCtor::pushNewCell(float _size, float _x, float _y, float _z, bool _is
                    { 0 } };
     TempData data{ 0, 1.f, {0.f, 0.f, 0.f}, {}, nullptr, nullptr };
 
-    //data.m_inPoints = _isLeaf ? new PointXYZIRGB[MAX_POINTS_PER_NODE] : nullptr;
+    //data.m_inPoints = _isLeaf ? new Point[MAX_POINTS_PER_NODE] : nullptr;
 
     m_vTreeCells.push_back(cell);
     m_vTempData.push_back(data);
 }
 
 
-void OctreeCtor::insertPointInCell(PointXYZIRGB const& _point, uint32_t _cellId)
+void OctreeCtor::insertPointInCell(Point const& _point, uint32_t _cellId)
 {
     if (m_vTreeCells[_cellId].m_isLeaf) {
         if (m_vTempData[_cellId].m_nbPoints < MAX_POINTS_PER_NODE) {
@@ -310,7 +301,7 @@ bool OctreeCtor::splitCell(uint32_t _cellId)
 
     m_vTreeCells[_cellId].m_isLeaf = false;
 
-    for (const PointXYZIRGB& point : m_vTempData[_cellId].m_inPoints)
+    for (const Point& point : m_vTempData[_cellId].m_inPoints)
     {
         insertPointInCell(point, _cellId);
     }
@@ -409,10 +400,8 @@ uint32_t OctreeCtor::getOctreeDepth(uint32_t _cellId)
     return localDepth + 1;
 }
 
-void OctreeCtor::encode(tls::PointFormat ptFormat, std::ostream& _osResult)
+void OctreeCtor::encode(std::ostream& _osResult)
 {
-    setPointFormat(ptFormat);
-
     m_octreeDepth = getOctreeDepth(m_uRootCell);
 
     if (m_pointCount == 0)
@@ -1139,9 +1128,4 @@ void QSPT16::fetchLayers_XYZ_I_RGB(QSptCell const& _cell, Coord16* _pXYZ, uint8_
             }
         }
     }
-}
-
-const BoundingBox& OctreeCtor::getBoundingBox() const
-{
-	return m_bbox;
 }

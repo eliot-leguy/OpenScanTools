@@ -16,10 +16,12 @@
 #include "gui/GuiData/GuiDataHD.h"
 #include "gui/GuiData/GuiDataMessages.h"
 #include "gui/texts/ScreenshotTexts.hpp"
+#include "gui/UnitConverter.h"
 
 #include "io/ImageWriter.h"
+#include "io/exports/CSVWriter.hxx"
 
-#include "utils/utils.h"
+#include "utils/Utils.h"
 #include "utils/Logger.h"
 #include "utils/ImGuiUtils.h"
 

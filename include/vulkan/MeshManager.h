@@ -1,19 +1,17 @@
 #ifndef MESH_MANAGER_H
 #define MESH_MANAGER_H
 
-#include "vulkan/VulkanManager.h"
 #include "vulkan/Graph/MemoryReturnCode.h"
-#include "pointCloudEngine/SmartBuffer.h"
 #include "models/3d/MeshBuffer.h"
 #include "io/MeshObjectTypes.h"
+#include "utils/safe_ptr.h"
 
 #include <glm/glm.hpp>
 
 #include <map>
+#include <set>
 #include <unordered_set>
 #include <filesystem>
-
-#include "models/OpenScanToolsModelEssentials.h"
 
 class Controller;
 class IMeshReader;

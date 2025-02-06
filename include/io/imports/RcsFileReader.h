@@ -3,6 +3,8 @@
 
 #include "io/imports/IScanFileReader.h"
 
+#include "models/graph/TransformationModule.h"
+
 #include <data/RCScan.h>
 
 
@@ -23,7 +25,7 @@ public:
     bool startReadingScan(uint32_t scanNumber) override;
     bool readPoints(PointXYZIRGB* dstBuf, uint64_t bufSize, uint64_t& readCount) override;
 
-    const tls::FileHeader& getTlsHeader() const override;
+    tls::FileHeader getTlsHeader() const override;
     tls::ScanHeader getTlsScanHeader(uint32_t scanNumber) const override;
 
 private:
@@ -41,6 +43,7 @@ private:
 
     tls::FileHeader m_fileHeader;
     tls::ScanHeader m_scanHeader;
+    TransformationModule transfo_;
 };
 
 #endif

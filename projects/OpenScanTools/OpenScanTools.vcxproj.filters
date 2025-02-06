@@ -188,9 +188,6 @@
     <Filter Include="src\models\data\MeshObject">
       <UniqueIdentifier>{3317e1f9-f542-4ac4-a304-408d2604916f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\sql">
-      <UniqueIdentifier>{8d4d9308-da45-40e7-9c03-1a2b43a83ed8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\io\imports\step-simplification">
       <UniqueIdentifier>{e1cc5708-9630-42a8-9e4a-70be630217fc}</UniqueIdentifier>
     </Filter>
@@ -389,12 +386,6 @@
     <Filter Include="include\core">
       <UniqueIdentifier>{856d4313-3646-4f16-b133-a43971cb8384}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\sql">
-      <UniqueIdentifier>{c2736488-eb41-4d29-b78a-1cbec678241f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\sql\impl">
-      <UniqueIdentifier>{30127c24-a655-4d91-af18-35ee6ecc063d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="include\services">
       <UniqueIdentifier>{df9623f4-5a70-47c9-8763-5a5474a7a942}</UniqueIdentifier>
     </Filter>
@@ -436,6 +427,9 @@
     </Filter>
     <Filter Include="src\models\graph">
       <UniqueIdentifier>{1ba69385-ccbc-44d5-a844-ecc75bdfab89}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\SQLite">
+      <UniqueIdentifier>{cb5817ff-803a-4a78-9765-df3a086f51c6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -589,17 +583,8 @@
     <ClCompile Include="..\..\ext\crossguid\guid.cpp">
       <Filter>ext\crossguid</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\pointCloudEngine\OctreeBase.cpp">
-      <Filter>src\pointCloudEngine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\pointCloudEngine\OctreeCtor.cpp">
-      <Filter>src\pointCloudEngine</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\pointCloudEngine\PCE_core.cpp">
       <Filter>src\pointCloudEngine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\io\exports\TlsWriter.cpp">
-      <Filter>src\io\exports</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\utils\System.cpp">
       <Filter>src\utils</Filter>
@@ -676,25 +661,16 @@
     <ClCompile Include="..\..\src\io\E57Utils.cpp">
       <Filter>src\io</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\io\imports\TlsReader.cpp">
-      <Filter>src\io\imports</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\io\exports\E57FileWriter.cpp">
       <Filter>src\io\exports</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\io\exports\IScanFileWriter.cpp">
       <Filter>src\io\exports</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\io\exports\TlsFileWriter.cpp">
-      <Filter>src\io\exports</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\io\imports\E57FileReader.cpp">
       <Filter>src\io\imports</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\io\imports\IScanFileReader.cpp">
-      <Filter>src\io\imports</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\io\imports\TlsFileReader.cpp">
       <Filter>src\io\imports</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\io\imports\FlsFileReader.cpp">
@@ -822,9 +798,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\controller\messages\SimpleNumberMessage.cpp">
       <Filter>src\controller\messages</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\utils\math\basic_functions.cpp">
-      <Filter>src\utils\math</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\gui\widgets\TreeNodeSystem\TreeModel.cpp">
       <Filter>src\gui\widgets\TreeNodeSystem</Filter>
@@ -1007,9 +980,6 @@
       <Filter>src\controller\contexts</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\pointCloudEngine\EmbeddedScan.cpp">
-      <Filter>src\pointCloudEngine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\pointCloudEngine\OctreeDecoder.cpp">
       <Filter>src\pointCloudEngine</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\pointCloudEngine\SmartBufferWorkload.cpp">
@@ -1510,9 +1480,6 @@
     <ClCompile Include="..\..\src\gui\Dialog\ProjectTemplateNameDialog.cpp">
       <Filter>src\gui\Dialog</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\sql\SQLiteRegister.cpp">
-      <Filter>src\sql</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\test\PerformanceMonitor.cpp">
       <Filter>src\test</Filter>
     </ClCompile>
@@ -1600,9 +1567,6 @@
     <ClCompile Include="..\..\src\gui\toolBars\ToolBarRenderTransparency.cpp">
       <Filter>src\gui\toolBars</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\models\application\TagTemplate.cpp">
-      <Filter>src\utils\math</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\io\imports\IMeshReader.cpp">
       <Filter>src\io\imports</Filter>
     </ClCompile>
@@ -1687,9 +1651,6 @@
     <ClCompile Include="..\..\src\controller\functionSystem\mesh\ContextMeshDistance.cpp">
       <Filter>src\controller\contexts\mesh</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\io\DataComparator.cpp">
-      <Filter>src\io</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\gui\Dialog\DialogExportFileObject.cpp">
       <Filter>src\gui\Dialog</Filter>
     </ClCompile>
@@ -1713,9 +1674,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\gui\Dialog\DialogSubProjectInfo.cpp">
       <Filter>src\gui\Dialog</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\io\DataEditor.cpp">
-      <Filter>src\io</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\gui\toolBars\ToolBarShareGroup.cpp">
       <Filter>src\gui\toolBars</Filter>
@@ -1989,6 +1947,18 @@
     </ClCompile>
     <ClCompile Include="..\..\src\models\graph\ViewPointNode.cpp">
       <Filter>src\models\graph</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\io\exports\TlsFileWriter.cpp">
+      <Filter>src\io\exports</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\io\imports\TlsFileReader.cpp">
+      <Filter>src\io\imports</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\io\MeshObjectTypes.cpp">
+      <Filter>src\io</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\models\application\TagTemplate.cpp">
+      <Filter>src\models\application</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -2580,12 +2550,6 @@
     <ClInclude Include="..\..\ext\crossguid\guid.hpp">
       <Filter>ext\crossguid</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\pointCloudEngine\OctreeBase.h">
-      <Filter>include\pointCloudEngine</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\pointCloudEngine\OctreeCtor.h">
-      <Filter>include\pointCloudEngine</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\pointCloudEngine\PCE_graphics.h">
       <Filter>include\pointCloudEngine</Filter>
     </ClInclude>
@@ -2594,18 +2558,6 @@
     </ClInclude>
     <ClInclude Include="..\..\include\pointCloudEngine\PCE_stream.h">
       <Filter>include\pointCloudEngine</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\models\pointCloud\TLS.h">
-      <Filter>include\models\pointCloud</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\io\imports\TlsReader.h">
-      <Filter>include\io\imports</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\io\exports\TlsWriter.h">
-      <Filter>include\io\exports</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\io\TlsMap.h">
-      <Filter>include\io</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\utils\time.h">
       <Filter>include\utils</Filter>
@@ -2661,12 +2613,6 @@
     <ClInclude Include="..\..\include\controller\functionSystem\ContextMoveTag.h">
       <Filter>include\controller\contexts</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\sql\SQLiteRegister.hpp">
-      <Filter>include\sql</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\sql\Impl\SQLiteRegister.hxx">
-      <Filter>include\sql\impl</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\controller\ControllerContext.h">
       <Filter>include\controller</Filter>
     </ClInclude>
@@ -2706,9 +2652,6 @@
     <ClInclude Include="..\..\include\io\exports\IScanFileWriter.h">
       <Filter>include\io\exports</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\io\exports\TlsFileWriter.h">
-      <Filter>include\io\exports</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\io\imports\E57FileReader.h">
       <Filter>include\io\imports</Filter>
     </ClInclude>
@@ -2717,12 +2660,6 @@
     </ClInclude>
     <ClInclude Include="..\..\include\io\imports\IScanFileReader.h">
       <Filter>include\io\imports</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\io\imports\TlsFileReader.h">
-      <Filter>include\io\imports</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\pointCloudEngine\OctreeDecoder.h">
-      <Filter>include\pointCloudEngine</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\models\application\TagTemplate.h">
       <Filter>include\models\application</Filter>
@@ -2829,9 +2766,6 @@
     <ClInclude Include="..\..\include\models\3d\Measures.h">
       <Filter>include\models\3d</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\utils\math\basic_functions.h">
-      <Filter>include\utils\math</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\gui\widgets\TreeNodeSystem\TreeNode.h">
       <Filter>include\gui\widgets\TreeNodeSystem</Filter>
     </ClInclude>
@@ -2876,9 +2810,6 @@
     </ClInclude>
     <ClInclude Include="..\..\include\controller\controls\ControlClippingEdition.h">
       <Filter>include\controller\controls</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\vulkan\ShaderCompiler.h">
-      <Filter>include\vulkan</Filter>
     </ClInclude>
     <ClInclude Include="..\..\ext\imgui\imgui_impl_vulkan.h">
       <Filter>ext\imgui</Filter>
@@ -3585,9 +3516,6 @@
     <ClInclude Include="..\..\include\controller\functionSystem\ContextExportOSTObjects.h">
       <Filter>include\controller\contexts</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\io\DataComparator.h">
-      <Filter>include\io</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\vulkan\Compute\ComputePrograms.h">
       <Filter>src\vulkan\Compute</Filter>
     </ClInclude>
@@ -3633,9 +3561,6 @@
     <ClInclude Include="..\..\include\controller\functionSystem\ContextImportOSTObjects.h">
       <Filter>include\controller\contexts</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\io\DataEditor.h">
-      <Filter>include\io</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\gui\texts\MarkerTexts.hpp">
       <Filter>include\gui\texts</Filter>
     </ClInclude>
@@ -3668,12 +3593,6 @@
     </ClInclude>
     <ClInclude Include="..\..\include\models\data\BeamBendingMeasure\BeamBendingMeasureData.h">
       <Filter>include\models\data\BeamBendingMeasure</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\models\data\Measure\MeasureData.h">
-      <Filter>include\models\data\Measure</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\models\3d\MeasureData.h">
-      <Filter>include\models\3d</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\utils\safe_ptr.h">
       <Filter>include\utils</Filter>
@@ -3968,6 +3887,24 @@
     </ClInclude>
     <ClInclude Include="..\..\include\gui\texts\MainGuiTexts.hpp">
       <Filter>include\gui\texts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\models\data\Measure\MeasureData.h">
+      <Filter>include\models\data\Measure</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\io\imports\TlsFileReader.h">
+      <Filter>include\io\imports</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ext\fmt\format.h">
+      <Filter>ext\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\io\exports\TlsFileWriter.h">
+      <Filter>include\io\exports</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\io\FileInputData.h">
+      <Filter>include\io</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ext\SQLiteCpp\include\sqlite3.h">
+      <Filter>ext\SQLite</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

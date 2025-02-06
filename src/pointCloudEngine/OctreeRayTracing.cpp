@@ -3,7 +3,6 @@
 #include "utils/Logger.h"
 #include <glm/gtx/quaternion.hpp>
 
-//#include "io/TlsMap.h"
 #include <ctime>
 
 #define M_PI           3.14159265358979323846  /* pi */
@@ -165,12 +164,6 @@ void OctreeRayTracing::displayCellInfo(const TreeCell& cell, const TreeCell& roo
 	}
 	Logger::log(LoggerMode::rayTracingLog) << "END OF DISPLAY" << Logger::endl << Logger::endl;
 
-	return;
-}
-
-void OctreeRayTracing::displayPointCoordinates(const PointXYZIRGB& point)
-{
-	Logger::log(LoggerMode::rayTracingLog) << "POINT INFO : " << point.x << " " << point.y << " " << point.z << Logger::endl << Logger::endl;
 	return;
 }
 

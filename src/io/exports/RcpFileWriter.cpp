@@ -1,11 +1,8 @@
 #include "io/exports/RcpFileWriter.h"
 #include "models/pointCloud/PointXYZIRGB.h"
-//#include "utils/time.h"
-//#include "utils/math/trigo.h"
 #include "utils/Logger.h"
-//#include "utils/Utils.h"
 
-#include <foundation/RCQuaternion.h>
+//#include <foundation/RCQuaternion.h>
 
 using namespace Autodesk::RealityComputing::Foundation;
 using namespace Autodesk::RealityComputing::Data;

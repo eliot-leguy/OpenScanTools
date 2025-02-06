@@ -17,7 +17,6 @@
 
 #include "io/exports/IScanFileWriter.h"
 #include "io/exports/RcpFileWriter.h"
-#include "io/exports/TlsWriter.h"
 #include "io/exports/CSVWriter.hxx"
 
 #include "utils/math/trigo.h"
@@ -34,6 +33,7 @@
 #include "io/SaveLoadSystem.h"
 #include "utils/Logger.h"
 
+#include "tls_impl.h"
 
 // Note (Aurélien) QT::StandardButtons enum values in qmessagebox.h
 #define Yes 0x00004000
@@ -190,9 +190,9 @@ void writeHeaderInCSV(CSVWriter* csvWriter, const tls::ScanHeader& header)
     *csvWriter << (header.transfo.translation[0]);
     *csvWriter << (header.transfo.translation[1]);
     *csvWriter << (header.transfo.translation[2]);
-    *csvWriter << (header.bbox.xMax - header.bbox.xMin);
-    *csvWriter << (header.bbox.yMax - header.bbox.yMin);
-    *csvWriter << (header.bbox.zMax - header.bbox.zMin);
+    *csvWriter << (header.limits.xMax - header.limits.xMin);
+    *csvWriter << (header.limits.yMax - header.limits.yMin);
+    *csvWriter << (header.limits.zMax - header.limits.zMin);
     glm::dvec3 eulers(tls::math::quat_to_euler_zyx_deg(glm::dquat(header.transfo.quaternion[3], header.transfo.quaternion[0], header.transfo.quaternion[1], header.transfo.quaternion[2])));
     *csvWriter << (eulers.x);
     *csvWriter << (eulers.y);
@@ -238,15 +238,14 @@ void ContextExportPC::copyTls(Controller& controller, CopyTask task)
         return;
     }
 
-    std::ofstream os;
-    os.open(task.dst_path, std::ios::out | std::ios::in | std::ios::binary);
-    if (os.fail())
+    tls::ImageFile_p img_file(task.dst_path, tls::usage::read);
+    if (!img_file.is_valid_file())
     {
         controller.updateInfo(new GuiDataProcessingSplashScreenLogUpdate(QString(TEXT_EXPORT_ERROR_FILE).arg(QString::fromStdWString(task.dst_path))));
         return;
     }
 
-    tls::writer::overwriteTransformation(os, task.dst_transfo.translation, task.dst_transfo.quaternion);
+    img_file.overwriteTransformation(0, task.dst_transfo);
 }
 
 bool ContextExportPC::processExport(Controller& controller, CSVWriter* csv_writer)
@@ -631,13 +630,17 @@ TransformationModule ContextExportPC::getBestTransformation(const ClippingAssemb
 {
     TransformationModule best_transfo;
 
-    BoundingBoxD scan_bbox;
-    scan_bbox.setEmpty();
+    BoundingBoxD total_bbox;
+    total_bbox.setEmpty();
 
     for (const tls::PointCloudInstance& pc : pc_instances)
     {
-        BoundingBoxD&& t_bbox = pc.header.bbox.transform(pc.transfo.getTransformation());
-        scan_bbox.extend(t_bbox);
+        const tls::Limits& limits = pc.header.limits;
+        BoundingBoxD scan_bbox{ limits.xMin, limits.xMax,
+                                limits.yMin, limits.yMax,
+                                limits.zMin, limits.zMax };
+
+        total_bbox.extend(scan_bbox.transform(pc.transfo.getTransformation()));
     }
 
     BoundingBoxD union_bbox;
@@ -663,7 +666,6 @@ TransformationModule ContextExportPC::getBestTransformation(const ClippingAssemb
         }
     }
 
-    BoundingBoxD total_bbox = scan_bbox;
     if (!clipping_assembly.clippingUnion.empty())
         total_bbox.intersect(union_bbox);
 
@@ -676,7 +678,7 @@ TransformationModule ContextExportPC::getBestTransformation(const ClippingAssemb
     if (clipping_assembly.clippingUnion.size() == 1)
         best_transfo.setRotation(glm::quat_cast(glm::inverse(clipping_assembly.clippingUnion[0]->matRT_inv)));
     else
-        best_transfo.setRotation(glm::dquat(0.0, 0.0, 0.0, 1.0));
+        best_transfo.setRotation(glm::dquat(1.0, 0.0, 0.0, 0.0));
 
     return best_transfo;
 }

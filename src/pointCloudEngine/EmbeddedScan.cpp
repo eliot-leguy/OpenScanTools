@@ -1,71 +1,65 @@
 #include "pointCloudEngine/EmbeddedScan.h"
 #include "pointCloudEngine/OctreeRayTracing.h"
-#include "pointCloudEngine/OctreeShredder.h"
 #include "vulkan/VulkanManager.h"
 #include "utils/Logger.h"
-#include "utils/Utils.h"
 #include "models/graph/TransformationModule.h"
 
-#include <chrono>
-#include <iostream>
-#include <future>
-using namespace std::chrono;
+#include "tls_impl.h"
 
+#include <chrono>
+#include <future>
+#include <set>
 #ifndef PORTABLE
 #include "io/exports/IScanFileWriter.h"
 #endif
 
+using namespace std::chrono;
+
 EmbeddedScan::EmbeddedScan(std::filesystem::path const& filepath)
-    : m_deleteFileWhenDestroyed(false)
+    : pt_format_(tls::PointFormat::TL_POINT_FORMAT_UNDEFINED)
+    , pt_precision_(tls::PrecisionType::TL_PRECISION_UNDEFINED)
+    , m_deleteFileWhenDestroyed(false)
     , m_lastFrameUse(0)
     , m_pCellBuffers(nullptr)
 {
-    // open file stream
-    std::ifstream istream;
-    istream.open(filepath, std::ios::in | std::ios::binary | std::ios::ate);
-    if (istream.fail()) {
-        Logger::log(IOLog) << "An error occured while opening the TLS file '" << filepath << "'" << Logger::endl;
-
-        return;
-    }
-    m_path = filepath;
-    m_fileSize = istream.tellg();
-
-    // Test if the file is a valid TLS
-    if (tls::reader::checkFile(istream, m_fileHeader) == false) {
-        Logger::log(IOLog) << "The file '" << filepath << "' is not recognized as a valid TLS file." << Logger::endl;
-        istream.close();
-        return;
-    }
-
-    // Create and initialize all the scans contained in the file
-    tls::reader::getScanInfo(istream, m_fileHeader.version, m_scanHeader, 0);
-    // In version 0.4, the TLS do not contain a name for each scan.
-    // So we get the name of the file.
-    // If there is more than one scan in the file, append with the scan number.
-    m_scanHeader.name = m_path.stem().wstring();
-
-    if (tls::reader::getEmbeddedScan(istream, m_fileHeader.version, *this) == false)
+    // open tls file
+    if (!tls_img_file_.open(filepath, tls::usage::read))
     {
-        Logger::log(IOLog) << "Failed to read the octree part in '" << m_path << "'" << Logger::endl;
-        istream.close();
+        Logger::log(IOLog) << "An error occured while opening the TLS file '" << filepath << "'" << Logger::endl;
         return;
     }
 
-    std::vector<float> stageInstance(m_cellCount * 4);
-    istream.seekg(m_instanceDataOffset);
-    istream.read((char*)stageInstance.data(), m_cellCount * 4 * sizeof(float));
-    istream.close();
+    tls_point_cloud_ = tls_img_file_.getImagePointCloud(0);
+
+    if(!tls_point_cloud_.getOctreeBase(*(tls::OctreeBase*)this))
+    {
+        Logger::log(IOLog) << "Failed to read the octree part in '" << tls_img_file_.getPath() << "'" << Logger::endl;
+        return;
+    }
+
+    tls::ScanHeader infos = tls_img_file_.getPointCloudHeader(0);
+    pt_format_ = infos.format;
+    pt_precision_ = infos.precision;
 
     // Initialize the buffers
     m_pCellBuffers = new SmartBuffer[m_cellCount];
     memset(m_pCellBuffers, 0, m_cellCount * sizeof(SmartBuffer));
 
-    VulkanManager& vkManager = VulkanManager::getInstance();
+    // Load the instance data
+    size_t data_size = 0;
+    // get the data size by passing a null buffer
+    tls_point_cloud_.getCellRenderData(nullptr, data_size);
+    if (data_size == 0)
+        return;
+    char* data_buffer = new char[data_size];
+    tls_point_cloud_.getCellRenderData(data_buffer, data_size);
 
-    vkManager.allocSimpleBuffer(m_cellCount * 4 * sizeof(float), m_instanceBuffer, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+    VulkanManager& vkManager = VulkanManager::getInstance();
+    vkManager.allocSimpleBuffer(data_size, m_instanceBuffer, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
     VkDeviceSize offset = 0;
-    vkManager.loadInSimpleBuffer(m_instanceBuffer, m_cellCount * 4 * sizeof(float), stageInstance.data(), offset, 4);
+    vkManager.loadInSimpleBuffer(m_instanceBuffer, data_size, data_buffer, offset, 4);
+
+    delete[] data_buffer;
 }
 
 EmbeddedScan::~EmbeddedScan()
@@ -86,40 +80,45 @@ EmbeddedScan::~EmbeddedScan()
 
     if (m_deleteFileWhenDestroyed)
     {
-        if (std::filesystem::remove(m_path) == true)
+        std::filesystem::path filepath = tls_img_file_.getPath();
+        tls_img_file_.close();
+
+        if (std::filesystem::remove(filepath) == true)
         {
-            Logger::log(IOLog) << "INFO - the file " << m_path << " has been successfully removed." << Logger::endl;
+            Logger::log(IOLog) << "INFO - the file " << filepath << " has been successfully removed." << Logger::endl;
         }
         else
         {
-            Logger::log(IOLog) << "WARNING - the file " << m_path << " cannot be removed from the file system. The file may be accessed elsewhere." << Logger::endl;
+            Logger::log(IOLog) << "WARNING - the file " << filepath << " cannot be removed from the file system. The file may be accessed elsewhere." << Logger::endl;
         }
     }
 }
 
 tls::ScanGuid EmbeddedScan::getGuid() const
 {
-    return m_scanHeader.guid;
+    return tls_img_file_.getPointCloudHeader(0).guid;
 }
 
 tls::FileGuid EmbeddedScan::getFileGuid() const
 {
-    return m_fileHeader.guid;
+    return tls_img_file_.getFileHeader().guid;
 }
 
 void EmbeddedScan::getInfo(tls::ScanHeader &info) const
 {
-    info = m_scanHeader;
+    info = tls_img_file_.getPointCloudHeader(0);
 }
 
 std::filesystem::path EmbeddedScan::getPath() const
 {
-    return m_path;
+    return tls_img_file_.getPath();
 }
 
 void EmbeddedScan::setPath(const std::filesystem::path& newPath)
 {
-    m_path = newPath;
+    tls_img_file_.close();
+    if (!tls_img_file_.open(newPath, tls::usage::read))
+        assert(0);
 }
 
 bool EmbeddedScan::getGlobalDrawInfo(TlScanDrawInfo& scanDrawInfo)
@@ -128,9 +127,8 @@ bool EmbeddedScan::getGlobalDrawInfo(TlScanDrawInfo& scanDrawInfo)
     if (m_instanceBuffer.buffer == VK_NULL_HANDLE)
         return false;
 
-    scanDrawInfo.scanVersion = m_scanHeader.version;
     scanDrawInfo.instanceBuffer = m_instanceBuffer.buffer;
-    scanDrawInfo.format = m_scanHeader.format;
+    scanDrawInfo.format = pt_format_;
     return true;
 }
 
@@ -230,11 +228,11 @@ bool EmbeddedScan::clipAndWrite(const TransformationModule& src_transfo, const C
         {
             std::vector<PointXYZIRGB> pointsClipped;
             clipIndividualPoints(points, pointsClipped, localAssembly);
-            resultOk &= _writer->mergePoints(pointsClipped.data(), pointsClipped.size(), src_transfo, m_scanHeader.format);
+            resultOk &= _writer->mergePoints(pointsClipped.data(), pointsClipped.size(), src_transfo, pt_format_);
         }
         else
         {
-            resultOk &= _writer->mergePoints(points.data(), points.size(), src_transfo, m_scanHeader.format);
+            resultOk &= _writer->mergePoints(points.data(), points.size(), src_transfo, pt_format_);
         }
     }
 
@@ -257,11 +255,11 @@ void EmbeddedScan::decodePointXYZIRGB(uint32_t cellId, std::vector<PointXYZIRGB>
     uint64_t nbOfPoints(cell.m_layerIndexes[cell.m_depthSPT]);
     dstPoints.reserve(dstPoints.size() + nbOfPoints);
 
-    float precisionValue = tls::getPrecisionValue(m_scanHeader.precision);
+    float precisionValue = tls::getPrecisionValue(pt_precision_);
 
     // On fait l'économie de test la présence d'intensité et de couleur on codant en dur
     // les 3 configurations de tls::PointFormat.
-    if (m_scanHeader.format == tls::PointFormat::TL_POINT_XYZ_I_RGB)
+    if (pt_format_ == tls::PointFormat::TL_POINT_XYZ_I_RGB)
     {
         for (uint64_t n(0); n < nbOfPoints; n++)
         {
@@ -277,7 +275,7 @@ void EmbeddedScan::decodePointXYZIRGB(uint32_t cellId, std::vector<PointXYZIRGB>
             dstPoints.push_back(dcdPoint);
         }
     }
-    else if (m_scanHeader.format == tls::PointFormat::TL_POINT_XYZ_I)
+    else if (pt_format_ == tls::PointFormat::TL_POINT_XYZ_I)
     {
         for (uint64_t n(0); n < nbOfPoints; n++)
         {
@@ -291,7 +289,7 @@ void EmbeddedScan::decodePointXYZIRGB(uint32_t cellId, std::vector<PointXYZIRGB>
             dstPoints.push_back(dcdPoint);
         }
     }
-    else if (m_scanHeader.format == tls::PointFormat::TL_POINT_XYZ_RGB)
+    else if (pt_format_ == tls::PointFormat::TL_POINT_XYZ_RGB)
     {
         for (uint64_t n(0); n < nbOfPoints; n++)
         {
@@ -321,7 +319,7 @@ void EmbeddedScan::decodePointCoord(uint32_t cellId, std::vector<glm::dvec3>& ds
         return;
     }
 
-    float precisionValue = tls::getPrecisionValue(m_scanHeader.precision);
+    float precisionValue = tls::getPrecisionValue(pt_precision_);
     uint64_t nbOfPoints(cell.m_layerIndexes[layerDepth]);
     dstPoints.reserve(dstPoints.size() + nbOfPoints);
 
@@ -409,7 +407,8 @@ void EmbeddedScan::setComputeTransfo(const glm::dvec3& t, const glm::dquat& q)
 
 BoundingBox EmbeddedScan::getLocalBoundingBox() const
 {
-    return m_scanHeader.bbox;
+    tls::Limits lim = tls_img_file_.getPointCloudHeader(0).limits;
+    return { lim.xMin, lim.xMax, lim.yMin, lim.yMax, lim.zMin, lim.zMax };
 }
 
 void EmbeddedScan::assumeWorkload()
@@ -424,14 +423,6 @@ void EmbeddedScan::assumeWorkload()
     }
     sbw->incrementPassCount();
 
-    // Open the file
-    std::ifstream istream;
-    istream.open(m_path, std::ios::in | std::ios::binary | std::ios::beg);
-    if (istream.fail()) {
-        Logger::log(IOLog) << "An error occured while opening the TLS file '" << m_path << "'" << Logger::endl;
-        return;
-    }
-
     bool result = true;
     std::vector<uint32_t> bufferIds = sbw->getMissingBuffers();
     std::vector<uint32_t> stillMissingBuffers;
@@ -444,7 +435,9 @@ void EmbeddedScan::assumeWorkload()
             if (VulkanManager::getInstance().allocSmartBuffer(m_vTreeCells[id].m_dataSize, sbuf, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) == VkResult::VK_SUCCESS)
             {
                 void* pData = VulkanManager::getInstance().getMappedPointer(sbuf);
-                result &= copyData(istream, pData, m_pointDataOffset + m_vTreeCells[id].m_dataOffset, m_vTreeCells[id].m_dataSize);
+
+                result &= tls_point_cloud_.getData(m_vTreeCells[id].m_dataOffset, pData, m_vTreeCells[id].m_dataSize);
+
                 sbuf.state.store(TlDataState::LOADED);
             }
             else
@@ -455,7 +448,6 @@ void EmbeddedScan::assumeWorkload()
             }
         }
     }
-    istream.close();
     sbw->setMissingBuffers(stillMissingBuffers); 
 
     // The workload is not complete
@@ -487,7 +479,6 @@ bool EmbeddedScan::startStreamingAll(char* _stageBuf, uint64_t _stageSize, uint6
 {
     VulkanManager& vkManager = VulkanManager::getInstance();
     bool continueStreaming = true;
-    bool missingSpace = false;
     uint64_t previewOffset = _stageOffset;
     // Optimization: avoid to stream a scan that is not in the draw pass anymore
     // the '+1' unsure to cover the small interval between the start of a frame and moment a scan is call for drawing.
@@ -528,26 +519,17 @@ bool EmbeddedScan::startStreamingAll(char* _stageBuf, uint64_t _stageSize, uint6
 
         if (vkManager.allocSmartBuffer(m_vTreeCells[id].m_dataSize, m_pCellBuffers[id], VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, flags) == VkResult::VK_SUCCESS)
         {
-            sortedDst.insert({ m_vTreeCells[id].m_dataOffset + m_pointDataOffset, m_vTreeCells[id].m_dataSize, m_pCellBuffers[id] });
+            sortedDst.insert({ m_vTreeCells[id].m_dataOffset, m_vTreeCells[id].m_dataSize, m_pCellBuffers[id] });
         }
         else
         {
             m_pCellBuffers[id].state.store(TlDataState::NOT_LOADED);
-            missingSpace = true;
             continueStreaming = false;
         }
     }
 
     if (sortedCPUTransfers.empty() && sortedStagedTransfers.empty())
         return (continueStreaming);
-
-    // Open the file
-    std::ifstream istream;
-    istream.open(m_path, std::ios::in | std::ios::binary | std::ios::beg);
-    if (istream.fail()) {
-        Logger::log(IOLog) << "An error occured while opening the TLS file '" << m_path << "'" << Logger::endl;
-        return true;
-    }
 
     // Pack the transfer from the hdd by proximity
     // while there are remaining transfers
@@ -573,20 +555,18 @@ bool EmbeddedScan::startStreamingAll(char* _stageBuf, uint64_t _stageSize, uint6
                 break;
         }
 
-        if (copyData(istream, _stageBuf + _stageOffset, srcOffset, dataSize) == false)
+        if (tls_point_cloud_.getData(srcOffset, _stageBuf + _stageOffset, dataSize) == false)
             return false;
 
         _stageOffset += dataSize;
     }
 
-
-    std::vector<TlStagedTransferInfo> groupedTransfers;
     size_t miniBufSize = 2 * 1024 * 1024;
     char* miniBuf = new char[miniBufSize];
     // No limit in the amount of transfer
     for (auto it_tsf = sortedCPUTransfers.begin(); it_tsf != sortedCPUTransfers.end(); )
     {
-        groupedTransfers.clear();
+        std::vector<TlStagedTransferInfo> groupedTransfers;
         uint64_t srcOffset = it_tsf->fileOffset;
         uint64_t dataSize = it_tsf->dataSize;
         uint64_t subStageOffset = 0;
@@ -607,7 +587,8 @@ bool EmbeddedScan::startStreamingAll(char* _stageBuf, uint64_t _stageSize, uint6
         }
 
         // We transfer from the file the data locally continuous
-        copyData(istream, miniBuf, srcOffset, dataSize);
+        if (tls_point_cloud_.getData(srcOffset, miniBuf, dataSize) == false)
+            return false;
 
         for (TlStagedTransferInfo sti : groupedTransfers)
         {
@@ -616,11 +597,79 @@ bool EmbeddedScan::startStreamingAll(char* _stageBuf, uint64_t _stageSize, uint6
             sti.sbuf.state.store(TlDataState::LOADED);
         }
     }
-    delete miniBuf;
+    delete[] miniBuf;
 
-    istream.close();
     return (continueStreaming);
 }
+
+// No more use of:
+//   TreeCell::m_dataSize
+//   TreeCell::m_dataOffset
+//   EmbeddedScan::m_pointDataOffset
+bool EmbeddedScan::startStreamingAll_k(void* _stageBuf, uint64_t _stageSize, uint64_t& _stageOffset, std::vector<TlStagedTransferInfo>& gpuTransfers)
+{
+    VulkanManager& vkManager = VulkanManager::getInstance();
+    bool continueStreaming = true;
+    // Optimization: avoid to stream a scan that is not in the draw pass anymore
+    // the '+1' unsure to cover the small interval between the start of a frame and moment a scan is call for drawing.
+    if (vkManager.getCurrentFrameIndex() > m_lastFrameUse + 1)
+        return true;
+
+    // Choose some cell missing
+    std::vector<uint32_t> copyMissingCells;
+    {
+        std::lock_guard<std::mutex> lock(m_streamMutex);
+        copyMissingCells = m_missingCells;
+    }
+
+    for (uint32_t id : copyMissingCells)
+    {
+        TlDataState state = TlDataState::NOT_LOADED;
+        VkMemoryPropertyFlags flags = m_vTreeCells[id].m_isLeaf ? VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT : VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+        bool not_loaded = m_pCellBuffers[id].state.compare_exchange_strong(state, TlDataState::LOADING);
+
+        if (!not_loaded)
+            continue;
+
+        // Get the size of the data to be downloaded by the file lib
+        uint64_t data_size = 0;
+        tls_point_cloud_.getPointsRenderData(id, nullptr, data_size);
+
+        if ((flags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) == 0)
+        {
+            if (_stageOffset + data_size > _stageSize)
+            {
+                continueStreaming = false;
+                // reset the buffer state to not loaded
+                m_pCellBuffers[id].state.store(TlDataState::NOT_LOADED); // or compare_exchange ?
+                break;
+            }
+        }
+
+        if (vkManager.allocSmartBuffer(data_size, m_pCellBuffers[id], VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, flags) != VkResult::VK_SUCCESS)
+        {
+            m_pCellBuffers[id].state.store(TlDataState::NOT_LOADED);
+            continueStreaming = false;
+        }
+
+        if ((flags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) != 0)
+        {
+            char* pMapped = (char*)vkManager.getMappedPointer(m_pCellBuffers[id]);
+            tls_point_cloud_.getPointsRenderData(id, pMapped, data_size);
+            m_pCellBuffers[id].state.store(TlDataState::LOADED);
+        }
+        else
+        {
+            tls_point_cloud_.getPointsRenderData(id, (char*)_stageBuf + _stageOffset, data_size);
+            gpuTransfers.push_back({ _stageOffset, data_size, m_pCellBuffers[id] });
+            _stageOffset += data_size;
+        }
+    }
+
+    return (continueStreaming);
+}
+
 
 void EmbeddedScan::ConcatCellStates::reset()
 {
@@ -638,7 +687,7 @@ void EmbeddedScan::checkDataState()
     checkCellDataState(m_uRootCell, concatStates, 0);
 
     SubLogger& log = Logger::log(DataLog);
-    log << "***** Octree analytics for " << m_scanHeader.name << " *****\n";
+    log << "***** Octree analytics for " << tls_img_file_.getPointCloudHeader(0).name << " *****\n";
     log << "----- Cells Loading state -----\n";
     log << "NOT_LOADED    = " << concatStates.countByState[(size_t)TlDataState::NOT_LOADED] << " | " << concatStates.sizeByState[(size_t)TlDataState::NOT_LOADED] << " octets\n";
     log << "LOADING       = " << concatStates.countByState[(size_t)TlDataState::LOADING] << " | " << concatStates.sizeByState[(size_t)TlDataState::LOADING] << " octets\n";
@@ -672,21 +721,6 @@ bool EmbeddedScan::canBeDeleted()
 void EmbeddedScan::deleteFileWhenDestroyed(bool deletePhysicalFile)
 {
     m_deleteFileWhenDestroyed = deletePhysicalFile;
-}
-
-bool EmbeddedScan::copyData(std::ifstream& _istream, void* const _dest, uint64_t _filePos, uint64_t _dataSize) const
-{
-    if (_filePos + _dataSize > m_fileSize)
-        return false;
-
-    _istream.seekg(_filePos);
-    _istream.read((char*)_dest, _dataSize);
-    if (_istream.fail()) {
-        Logger::log(IOLog) << "An error occured during the reading of data in file " << m_path << " at position 0x" << std::hex << _filePos << Logger::endl;
-        return false;
-    }
-
-    return true;
 }
 
 //-------------------------------------+
@@ -1143,7 +1177,7 @@ void EmbeddedScan::samplePointsByStep(float samplingStep, const std::vector<uint
     }
     treatWorkload(workload);
 
-    float precisionValue = tls::getPrecisionValue(m_scanHeader.precision);
+    float precisionValue = tls::getPrecisionValue(pt_precision_);
     uint32_t maxLayerDelta = std::max(1u, (uint32_t)(std::floorf(std::log2(samplingStep / precisionValue))));
     // !!! Attention !!!
     // Suite à une erreur dans la définition initiale du format tls, le layer 16 n’existe pas.

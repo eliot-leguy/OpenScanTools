@@ -2,12 +2,11 @@
 #define RCP_FILE_WRITER_H
 
 #include "io/exports/IScanFileWriter.h"
-#include "models/pointCloud/TLS.h"
+#include "tls_def.h"
 
 #include <data/RCProjectImportSession.h>
 
 #include <filesystem>
-#include <vector>
 #include <list>
 
 using Autodesk::RealityComputing::Foundation::RCSharedPtr;

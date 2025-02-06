@@ -1,7 +1,6 @@
 #include "io/exports/E57FileWriter.h"
 #include "models/pointCloud/PointXYZIRGB.h"
 #include "utils/time.h"
-#include "utils/math/trigo.h"
 #include "utils/Utils.h"
 
 E57FileWriter::E57FileWriter(const std::filesystem::path& filepath, e57::ImageFile imf)
@@ -142,9 +141,9 @@ bool E57FileWriter::appendPointCloud(const tls::ScanHeader& info, const Transfor
     data3D.append(pointCloud);
 
     // Add guid [required]
-    // Generate a new Guid for this point cloud
-    xg::Guid newGuid = xg::Guid();
-    pointCloud.set("guid", e57::StringNode(m_imf, newGuid.str()));
+    // Generate a new Guid if not provided
+    xg::Guid e57_guid = info.guid == xg::Guid() ? xg::newGuid() : info.guid;
+    pointCloud.set("guid", e57::StringNode(m_imf, e57_guid.str()));
 
     // Add name [optional]
     pointCloud.set("name", e57::StringNode(m_imf, Utils::to_utf8(m_scanHeader.name)));
@@ -194,7 +193,7 @@ bool E57FileWriter::appendPointCloud(const tls::ScanHeader& info, const Transfor
         colorLimits.set("colorBlueMaximum", e57::IntegerNode(m_imf, 255));
     }
 
-    m_bbox = m_scanHeader.bbox;
+    m_bbox.setEmpty();
 
     // No point grouping scheme
 
