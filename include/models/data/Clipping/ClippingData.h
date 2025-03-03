@@ -41,11 +41,7 @@ public:
 	int getRampSteps() const;
 	bool isRampClamped() const;
 
-	void setSelectedPhase(const std::wstring& phase);
-	std::wstring getSelectedPhase() const;
-
 protected:
-	std::wstring m_phaseSelected = L"";
 	ClippingMode m_clippingMode = ClippingMode::showInterior;
 	bool m_clippingActive = false;
 	float m_minClipDist = 0.f;

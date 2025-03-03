@@ -26,7 +26,6 @@ public:
 
 private:
 	void update();
-	void updatePhase(SafePtr<AClippingNode>&);
 	void prepareUi(ElementType type);
 
 	void blockSignals(bool value);
@@ -36,7 +35,6 @@ public slots:
 	void onShowInteriorClick();
 	void onShowExteriorClick();
 	void onByPhaseClick();
-	void onPhaseSelect();
 	void onActiveClipping();
 	void onMinClipDistEdit();
 	void onMaxClipDistEdit();

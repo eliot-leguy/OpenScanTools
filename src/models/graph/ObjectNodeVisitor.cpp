@@ -1581,7 +1581,7 @@ void ObjectNodeVisitor::bakeClipping(const SafePtr<AGraphNode>& node, const Tran
     if (!rClipping)
         return;
 
-    std::wstring phase = rClipping->getSelectedPhase();
+    std::wstring phase = rClipping->getPhase();
     
 
     if (rClipping->getClippingMode() == ClippingMode::byPhase) {

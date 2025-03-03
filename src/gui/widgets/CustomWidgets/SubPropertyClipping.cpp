@@ -28,7 +28,6 @@ SubPropertyClipping::SubPropertyClipping(QWidget *parent, float guiScale)
 	connect(m_ui.ExteriorModeRadioBtn, SIGNAL(pressed()), this, SLOT(onShowExteriorClick()));
 	connect(m_ui.byPhaseModeRadioBtn, SIGNAL(pressed()), this, SLOT(onByPhaseClick()));
 
-	connect(m_ui.PhasesToShow, SIGNAL(currentIndexChanged(int)), this, SLOT(onPhaseSelect()));
 	connect(m_ui.lineEdit_minClip, &QLineEdit::editingFinished, this, &SubPropertyClipping::onMinClipDistEdit);
 	connect(m_ui.lineEdit_maxClip, &QLineEdit::editingFinished, this, &SubPropertyClipping::onMaxClipDistEdit);
 
@@ -90,6 +89,7 @@ void SubPropertyClipping::update()
 	m_ui.group_clip->setChecked(rClip->isClippingActive());
 	m_ui.InteriorModeRadioBtn->setChecked(rClip->getClippingMode() == ClippingMode::showInterior ? true : false);
 	m_ui.ExteriorModeRadioBtn->setChecked(rClip->getClippingMode() == ClippingMode::showExterior ? true : false);
+	m_ui.byPhaseModeRadioBtn->setChecked(rClip->getClippingMode() == ClippingMode::byPhase ? true : false);
 
 	m_ui.lineEdit_minClip->setValue(rClip->getMinClipDist());
 	m_ui.lineEdit_maxClip->setValue(rClip->getMaxClipDist());
@@ -100,45 +100,10 @@ void SubPropertyClipping::update()
 	m_ui.spinBox_stepsRamp->setValue(rClip->getRampSteps());
 	m_ui.checkBox_clamp->setChecked(rClip->isRampClamped());
 
-	// Initialiser le menu déroulant "Phases to Show"
-	updatePhase(m_storedClip);
 
 	blockSignals(false);
 
 	return;
-}
-
-void SubPropertyClipping::updatePhase(SafePtr<AClippingNode>& rObject)
-{
-	std::cout << "Update phase" << std::endl;
-	if (!m_controllerContext)
-		return;
-
-	SafePtr<UserList> phaseList = m_controllerContext->getUserList(listId(LIST_PHASE_ID));
-
-	std::wstring phaseDefault = NA_FIELD_NAME.toStdWString();
-
-	phaseDefault = rObject.cget()->getSelectedPhase();
-
-	{
-		m_ui.PhasesToShow->clear();
-		int i = -1;
-		ReadPtr<UserList> rPhase = phaseList.cget();
-		if (rPhase)
-		{
-			int storedId = rPhase->clist().empty() ? -1 : 1;
-
-			for (std::wstring phase : rPhase->clist())
-			{
-				m_ui.PhasesToShow->addItem(QString::fromStdWString(phase));
-				++i;
-				if (phaseDefault == phase)
-					storedId = i;
-			}
-			if (storedId >= 0)
-				m_ui.PhasesToShow->setCurrentIndex(storedId);
-		}
-	}
 }
 
 
@@ -165,7 +130,6 @@ void SubPropertyClipping::prepareUi(ElementType type)
 	m_ui.InteriorModeRadioBtn->setEnabled(type != ElementType::Grid && m_ui.group_clip->isChecked());
 	m_ui.ExteriorModeRadioBtn->setEnabled(type != ElementType::Grid && m_ui.group_clip->isChecked());
 
-	m_ui.PhasesToShow->setEnabled(type != ElementType::Grid && m_ui.group_clip->isChecked());
 }
 
 void SubPropertyClipping::onShowInteriorClick()
@@ -184,23 +148,6 @@ void SubPropertyClipping::onByPhaseClick()
 {
 	if (m_dataDispatcher)
 		m_dataDispatcher->sendControl(new control::clippingEdition::SetMode(m_storedClip, ClippingMode::byPhase));
-}
-
-void SubPropertyClipping::onPhaseSelect()
-{
-	if (!m_dataDispatcher)
-		return;
-
-	// Récupérer le texte actuellement sélectionné dans la boîte à outils "PhasesToShow"
-	QString selectedPhaseQt = m_ui.PhasesToShow->currentText();
-	std::wstring selectedPhase = selectedPhaseQt.toStdWString();
-
-	// Si "All" est sélectionné, définir la phase par défaut (par exemple, une chaîne vide)
-	if (selectedPhase == L"All" || selectedPhase == L"Tous")
-		selectedPhase = L"";
-
-	// Envoyer un contrôle pour définir la phase sélectionnée sur l'objet de clipping
-	m_dataDispatcher->sendControl(new control::clippingEdition::SetSelectedPhase(m_storedClip, selectedPhase));
 }
 
 void SubPropertyClipping::onActiveClipping()

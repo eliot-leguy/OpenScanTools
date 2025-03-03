@@ -447,8 +447,7 @@ namespace control::clippingEdition
     {
 		if (auto node = m_node)
 		{
-			std::cout << "SetSelectedPhase::doFunction" << std::endl;
-			node.get()->setSelectedPhase(m_phase);
+			node.get()->setPhase(m_phase);
 		}
     }
     ControlType SetSelectedPhase::getType() const

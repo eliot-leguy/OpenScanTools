@@ -3,6 +3,7 @@
 #include <QtWidgets/qapplication.h>
 #include <QtCore/qdir.h>
 #include <clocale>
+#include <iostream>
 
 #define TEMPLATE_TRANSLATION_FILE "qt_*.qm"
 
@@ -23,12 +24,17 @@ Translator::Translator(QApplication* application, const std::filesystem::path& t
     // format systems langage
     QString defaultLocale = QLocale::system().name(); // e.g. "de_DE"
     defaultLocale.truncate(defaultLocale.lastIndexOf('_')); // e.g. "de"
+#ifdef _DEBUG_
+	QString path = QString::fromStdString("../../translations/");
+#else
 	QString path(QString::fromStdWString(translationFolder.wstring()));
+#endif
     QDir dir(path);
     QStringList fileNames = dir.entryList(QStringList());
 	TrLog << "Load from " << translationFolder << Logger::endl;
 	for (int i = 0; i < fileNames.size(); ++i) 
 	{
+		std::cout << fileNames[i].toStdString() << std::endl;
 		// get locale extracted by filename
 		QString locale(fileNames[i]);// "TranslationExample_de.qm"
 		locale.truncate(locale.lastIndexOf('.')); // "TranslationExample_de"
@@ -38,7 +44,7 @@ Translator::Translator(QApplication* application, const std::filesystem::path& t
 			if (m_langages.find(dictionnary.at(locale)) != m_langages.end())
 				m_langages[dictionnary.at(locale)].push_back(path + "/" + fileNames[i]);
 			else
-				m_langages[dictionnary.at(locale)] = { path + "/" + fileNames[i] };
+				m_langages[dictionnary.at(locale)] = { path + "/" + fileNames[i] }; 
 			TrLog << "Load " << path.toStdString() << "/" << fileNames[i].toStdString() << Logger::endl;
 		}
 	}
