@@ -573,6 +573,11 @@ void ProjectTreePanel::internClipping()
 	m_dataDispatcher.sendControl(new control::clippingEdition::SetMode(ClippingMode::showInterior, false, true));
 }
 
+void ProjectTreePanel::byPhaseClipping()
+{
+	m_dataDispatcher.sendControl(new control::clippingEdition::SetMode(ClippingMode::byPhase, false, true));
+}
+
 void ProjectTreePanel::pickItems()
 {
 	QModelIndexList list = this->selectionModel()->selectedIndexes();
@@ -829,12 +834,14 @@ void ProjectTreePanel::showTreeMenu(QPoint p)
 		addActionToMenu(menu, new QAction(TEXT_CONTEXT_DISABLE_CLIPPING, this), &ProjectTreePanel::disableClipping);
 		addActionToMenu(menu, new QAction(TEXT_CONTEXT_INTERIOR_CLIPPING, this), &ProjectTreePanel::internClipping);
 		addActionToMenu(menu, new QAction(TEXT_CONTEXT_EXTERIOR_CLIPPING, this), &ProjectTreePanel::externCliping);
+		addActionToMenu(menu, new QAction(TEXT_CONTEXT_PHASE_CLIPPING, this), &ProjectTreePanel::byPhaseClipping);
 	}
 
 	// Desactivate all clippings
 	if (m_lastTreeNodeSelected == m_itemsNode) 
 	{
 		addActionToMenu(menu, new QAction(TEXT_CONTEXT_DISABLE_ALL_CLIPPING, this), &ProjectTreePanel::disableAllClippings);
+		addActionToMenu(menu, new QAction(TEXT_CONTEXT_DISABLE_ALL_RAMPS, this), &ProjectTreePanel::disableAllRamps);
 		addActionToMenu(menu, new QAction(TEXT_CONTEXT_DISABLE_ALL_RAMPS, this), &ProjectTreePanel::disableAllRamps);
 	}
 

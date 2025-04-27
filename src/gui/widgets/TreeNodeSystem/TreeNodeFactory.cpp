@@ -545,7 +545,8 @@ TreeNode* TreeNodeFactory::constructStatusNodes(const std::unordered_set<Element
 TreeNode* TreeNodeFactory::constructClipMethodNodes(const std::unordered_set<ElementType>& types, TreeNode* parentNode)
 {
 	std::vector<std::pair<QString, ClippingMode>> clipModes = { {TEXT_CLIPINTERN, ClippingMode::showInterior},
-																{TEXT_CLIPEXTERN, ClippingMode::showExterior}
+																{TEXT_CLIPEXTERN, ClippingMode::showExterior},
+																{TEXT_CLIPPHASE, ClippingMode::byPhase},	
 	};
 
 	TreeNode* clipMethNode = constructMasterNode(TEXT_CLIPMETH_TREE_NODE, parentNode->getTreeType());
