@@ -40,6 +40,7 @@
 #include "models/3d/PointCloudDrawData.h"
 #include "models/3d/DisplayParameters.h"
 #include "vulkan/vulkan.h"
+#include <map>
 
 class HashFrame
 {

@@ -16,6 +16,7 @@
 #include "vulkan/VkUniform.h"
 
 #include <string>
+#include <map>
 
 class GraphManager;
 class ManipulatorNode;
