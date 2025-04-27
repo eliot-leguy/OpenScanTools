@@ -440,4 +440,18 @@ namespace control::clippingEdition
     {
         return ControlType::setRampClamped;
     }
+    SetSelectedPhase::~SetSelectedPhase()
+    {
+    }
+    void SetSelectedPhase::doFunction(Controller& controller)
+    {
+		if (auto node = m_node)
+		{
+			node.get()->setPhase(m_phase);
+		}
+    }
+    ControlType SetSelectedPhase::getType() const
+    {
+        return ControlType::setSeletedPhase;
+    }
 }

@@ -2,11 +2,13 @@
 #define CLIPPING_DATA_H
 
 #include "models/data/Clipping/ClippingTypes.h"
+#include <string> 
 
 enum class ElementType;
 class ControllerContext;
 
 class ClippingData
+
 {
 public:
 	ClippingData(const ClippingData& data);
@@ -50,6 +52,7 @@ protected:
 	float m_rampMax = 1.f;
 	int m_rampSteps = 8; // max = 240
 	bool m_rampClamped = false; // only for the box
+
 };
 
 #endif

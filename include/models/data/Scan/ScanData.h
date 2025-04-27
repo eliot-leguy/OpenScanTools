@@ -35,6 +35,7 @@ public:
 	time_t getAcquisitionTime() const;
 	const std::wstring getStringAcquisitionTime() const;
 
+
 	//Setters
 	void setClippable(bool clippable);
 	void setScanPath(const std::filesystem::path& scanPath);
@@ -50,6 +51,8 @@ protected:
 	std::wstring m_sensorModel = L"";
 	std::wstring m_sensorSerialNumber = L"";
 	time_t m_acquisitionTime = 0;
+
+	std::wstring m_phase = L"";
 };
 
 

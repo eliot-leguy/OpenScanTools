@@ -88,7 +88,7 @@ uint32_t ObjectNodeVisitor::getTextHoveredId() const
 
 uint64_t ObjectNodeVisitor::getFrameHash() const
 {
-    return HashFrame::hashRenderingData(m_fbExtent, m_viewProjMatrix, m_clippingAssembly, m_bakedPointCloud, m_displayParameters);
+    return HashFrame::hashRenderingData(m_fbExtent, m_viewProjMatrix, m_clippingAssemblies, m_bakedPointCloud, m_displayParameters);
 }
 
 void ObjectNodeVisitor::setCamera(const CameraNode& camera)
@@ -117,7 +117,7 @@ void ObjectNodeVisitor::getObjectMarkerText(const SafePtr<AObjectNode>& object, 
     
     TextFilter filter;
     ElementType type;
-    SafePtr<Author> author;
+    SafePtr<Author> author; 
 
     {
         ReadPtr<AObjectNode> rObj = object.cget();
@@ -565,21 +565,26 @@ void ObjectNodeVisitor::drawRampOverlay()
 
     bool rampSelected = false;
     std::shared_ptr<IClippingGeometry> rampToOverlay;
-    for (const std::shared_ptr<IClippingGeometry>& ramp : m_clippingAssembly.rampActives)
+    for (const auto& [phase, clippingAssembly] : m_clippingAssemblies)
     {
-        if (!ramp->isSelected)
-            continue;
+        for (const std::shared_ptr<IClippingGeometry>& ramp : clippingAssembly.rampActives)
+        {
+            if (!ramp->isSelected)
+                continue;
 
-        if(!rampSelected)
-        {
-            rampSelected = true;
-            rampToOverlay = ramp;
+            if (!rampSelected)
+            {
+                rampSelected = true;
+                rampToOverlay = ramp;
+            }
+            else
+            {
+                rampToOverlay = nullptr;
+                break;
+            }
         }
-        else
-        {
-            rampToOverlay = nullptr;
+        if (rampToOverlay == nullptr)
             break;
-        }
     }
 
     if (rampToOverlay == nullptr)
@@ -1207,16 +1212,31 @@ void ObjectNodeVisitor::bakeGraph(SafePtr<AGraphNode> root)
 
     m_cs_marker_max_z = (m_projMatrix * glm::dvec4(0.0, 0.0, m_displayParameters.m_markerOptions.maximumDisplayDistance, 1.0)).z;
 
+
+    // Collecter toutes les phases
+    std::unordered_set<std::wstring> phases = collectPhases(root);
+
+    // Initialiser les ClippingAssembly
+    initializeClippingAssemblies(phases);
+
+
     TransformationModule origin_transfo;
     origin_transfo.addGlobalTranslation(m_camera.getLargeCoordinatesCorrection());
 
     nextGeoNode(root, origin_transfo);
 
     // Generate the Clipping Data for the shaders
-    std::vector<UniformClippingData> UniformClippingData;
+    //std::vector<UniformClippingData> UniformClippingData;
     //m_clippingAssembly.clearMatrix();
-    generateUniformData(m_clippingAssembly, UniformClippingData);
-    m_camera.uploadClippingUniform(UniformClippingData, m_uniformSwapIndex);
+   /* generateUniformData(m_clippingAssembly, UniformClippingData);
+    m_camera.uploadClippingUniform(UniformClippingData, m_uniformSwapIndex);*/
+
+    for (auto& [phase, clippingAssembly] : m_clippingAssemblies)
+    {
+        std::vector<UniformClippingData> uniformClippingData;
+        generateUniformData(clippingAssembly, uniformClippingData);
+        m_camera.uploadClippingUniform(uniformClippingData, m_uniformSwapIndex);
+    }
 }
 
 void ObjectNodeVisitor::nextGeoNode(const SafePtr<AGraphNode>& node, const TransformationModule& parent_transfo)
@@ -1349,7 +1369,7 @@ void ObjectNodeVisitor::bakeGraphics(const SafePtr<AGraphNode>& node, const Tran
 
         wScan->uploadUniform(transfoMat, m_uniformSwapIndex);
         if(wScan->getScanGuid().isValid())
-            m_bakedPointCloud.push_back({ transfoMat, wScan->getScanGuid(), color, wScan->getUniform(m_uniformSwapIndex) , wScan->getClippable(), false });
+            m_bakedPointCloud.push_back({ transfoMat, wScan->getScanGuid(), color, wScan->getUniform(m_uniformSwapIndex) , wScan->getClippable(), wScan->getPhase(),false});
         break;
     }
     case ElementType::PCO:
@@ -1360,7 +1380,7 @@ void ObjectNodeVisitor::bakeGraphics(const SafePtr<AGraphNode>& node, const Tran
         Color32 color = pco->getColor();
         pco->uploadUniform(transfoMat, m_uniformSwapIndex);
         if (pco->getScanGuid().isValid())
-            m_bakedPointCloud.push_back({ transfoMat, pco->getScanGuid(), color, pco->getUniform(m_uniformSwapIndex) , pco->getClippable(), true });
+            m_bakedPointCloud.push_back({ transfoMat, pco->getScanGuid(), color, pco->getUniform(m_uniformSwapIndex) , pco->getClippable(), pco->getPhase(), true});
         break;
     }
     case ElementType::BeamBendingMeasure:
@@ -1515,22 +1535,102 @@ void ObjectNodeVisitor::bakeGraphics(const SafePtr<AGraphNode>& node, const Tran
     }
 }
 
-void ObjectNodeVisitor::bakeClipping(const SafePtr<AGraphNode>& node, const TransformationModule& gTransfo)
+void ObjectNodeVisitor::initializeClippingAssemblies(const std::unordered_set<std::wstring>& phases)
 {
-    ReadPtr<AClippingNode> rClipping = static_read_cast<AClippingNode>(node);
+    for (const auto& phase : phases)
+    {
+        m_clippingAssemblies[phase] = ClippingAssembly();
+    }
+}
+
+std::unordered_set<std::wstring> ObjectNodeVisitor::collectPhases(const SafePtr<AGraphNode>& root)
+{
+    std::unordered_set<std::wstring> phases;
+
+    std::function<void(const SafePtr<AGraphNode>&)> collectPhasesRecursively = [&](const SafePtr<AGraphNode>& node) {
+        ReadPtr<AGraphNode> rNode = node.cget();
+        if (!rNode)
+            return;
+
+        ReadPtr<AClippingNode> rClipping = static_read_cast<AClippingNode>(node);
+        if (rClipping)
+        {
+            std::wstring phase = rClipping->getPhase();
+            if (!phase.empty())
+            {
+                phases.insert(phase);
+            }
+        }
+
+        std::unordered_set<SafePtr<AGraphNode>> children = AGraphNode::getGeometricChildren(node);
+        for (const SafePtr<AGraphNode>& child : children)
+        {
+            collectPhasesRecursively(child);
+        }
+    };
+
+    collectPhasesRecursively(root);
+
+    return phases;
+}
+
+void ObjectNodeVisitor::bakeClipping(const SafePtr<AGraphNode>& node, const TransformationModule& gTransfo) {
+    WritePtr<AClippingNode> rClipping = static_write_cast<AClippingNode>(node);
     if (!rClipping)
         return;
 
-    if (rClipping->isClippingActive())
-    {
-        rClipping->pushClippingGeometries(m_clippingAssembly, gTransfo);
-    }
+    std::wstring phase = rClipping->getPhase();
+    
 
-    if (rClipping->isRampActive())
-    {
-        rClipping->pushRampGeometries(m_clippingAssembly.rampActives, gTransfo);
+    if (rClipping->getClippingMode() == ClippingMode::byPhase) {
+        for (auto& [key, clippingAssembly] : m_clippingAssemblies) {
+            if (key == phase) {
+                rClipping->setClippingMode(ClippingMode::showInterior);
+                if (rClipping->isClippingActive()) {
+                    rClipping->pushClippingGeometries(clippingAssembly, gTransfo);
+                }
+                if (rClipping->isRampActive()) {
+                    rClipping->pushRampGeometries(clippingAssembly.rampActives, gTransfo);
+                }
+            }
+            else {
+                rClipping->setClippingMode(ClippingMode::showExterior);
+                if (rClipping->isClippingActive()) {
+                    rClipping->pushClippingGeometries(clippingAssembly, gTransfo);
+                }
+                if (rClipping->isRampActive()) {
+                    rClipping->pushRampGeometries(clippingAssembly.rampActives, gTransfo);
+                }
+            }
+        }
+        rClipping->setClippingMode(ClippingMode::byPhase);
+    }
+    else {
+        if (phase.empty()) {
+            for (auto& [key, clippingAssembly] : m_clippingAssemblies) {
+                if (rClipping->isClippingActive()) {
+                    rClipping->pushClippingGeometries(clippingAssembly, gTransfo);
+                }
+                if (rClipping->isRampActive()) {
+                    rClipping->pushRampGeometries(clippingAssembly.rampActives, gTransfo);
+                }
+            }
+        }
+        else {
+            auto it = m_clippingAssemblies.find(phase);
+            if (it != m_clippingAssemblies.end()) {
+                ClippingAssembly& clippingAssembly = it->second;
+                if (rClipping->isClippingActive()) {
+                    rClipping->pushClippingGeometries(clippingAssembly, gTransfo);
+                }
+                if (rClipping->isRampActive()) {
+                    rClipping->pushRampGeometries(clippingAssembly.rampActives, gTransfo);
+                }
+            }
+        }
     }
 }
+
 
 void ObjectNodeVisitor::drawImGuiBegin(SafePtr<AGraphNode> startNode, VkCommandBuffer cmdBuffer)
 {
@@ -1597,7 +1697,9 @@ void ObjectNodeVisitor::draw_baked_pointClouds(VkCommandBuffer cmdBuffer, Render
 
     for (const PointCloudDrawData& bakedPC : m_bakedPointCloud)
     {
-        clipAndDrawPointCloud(cmdBuffer, renderer, bakedPC, projInfoNode, bakedPC.clippable ? m_clippingAssembly : emptyAssembly);
+        const auto& phase = bakedPC.phase;
+        const auto& clippingAssembly = phase.empty() ? emptyAssembly : m_clippingAssemblies.at(phase);
+        clipAndDrawPointCloud(cmdBuffer, renderer, bakedPC, projInfoNode, bakedPC.clippable ? clippingAssembly : emptyAssembly);
     }
 }
 

@@ -2,6 +2,12 @@
 #include "controller/controls/ControlClippingEdition.h"
 
 #include "models/graph/AClippingNode.h"
+#include <models/application/List.h>
+#include <models/application/Ids.hpp>
+#include <gui/texts/DefaultUserLists.hpp>
+#include "controller/ControllerContext.h"
+#include "controller/Controller.h"
+
 
 void SubPropertyClipping::hideEvent(QHideEvent* event)
 {
@@ -20,6 +26,8 @@ SubPropertyClipping::SubPropertyClipping(QWidget *parent, float guiScale)
 	connect(m_ui.group_clip, &QGroupBox::clicked, this, &SubPropertyClipping::onActiveClipping);
 	connect(m_ui.InteriorModeRadioBtn, SIGNAL(pressed()), this, SLOT(onShowInteriorClick()));
 	connect(m_ui.ExteriorModeRadioBtn, SIGNAL(pressed()), this, SLOT(onShowExteriorClick()));
+	connect(m_ui.byPhaseModeRadioBtn, SIGNAL(pressed()), this, SLOT(onByPhaseClick()));
+
 	connect(m_ui.lineEdit_minClip, &QLineEdit::editingFinished, this, &SubPropertyClipping::onMinClipDistEdit);
 	connect(m_ui.lineEdit_maxClip, &QLineEdit::editingFinished, this, &SubPropertyClipping::onMaxClipDistEdit);
 
@@ -59,6 +67,12 @@ void SubPropertyClipping::setObject(const SafePtr<AClippingNode>& object)
 	update();
 }
 
+void SubPropertyClipping::setControllerInfo(const Controller& controller) {
+	m_controllerContext = &controller.cgetContext() ;
+	m_dataDispatcher = &controller.getDataDispatcher();
+}
+
+
 void SubPropertyClipping::setDataDispatcher(IDataDispatcher* dataDispatcher)
 {
 	m_dataDispatcher = dataDispatcher;
@@ -75,6 +89,7 @@ void SubPropertyClipping::update()
 	m_ui.group_clip->setChecked(rClip->isClippingActive());
 	m_ui.InteriorModeRadioBtn->setChecked(rClip->getClippingMode() == ClippingMode::showInterior ? true : false);
 	m_ui.ExteriorModeRadioBtn->setChecked(rClip->getClippingMode() == ClippingMode::showExterior ? true : false);
+	m_ui.byPhaseModeRadioBtn->setChecked(rClip->getClippingMode() == ClippingMode::byPhase ? true : false);
 
 	m_ui.lineEdit_minClip->setValue(rClip->getMinClipDist());
 	m_ui.lineEdit_maxClip->setValue(rClip->getMaxClipDist());
@@ -85,10 +100,12 @@ void SubPropertyClipping::update()
 	m_ui.spinBox_stepsRamp->setValue(rClip->getRampSteps());
 	m_ui.checkBox_clamp->setChecked(rClip->isRampClamped());
 
+
 	blockSignals(false);
 
 	return;
 }
+
 
 void SubPropertyClipping::prepareUi(ElementType type)
 {
@@ -112,6 +129,7 @@ void SubPropertyClipping::prepareUi(ElementType type)
 
 	m_ui.InteriorModeRadioBtn->setEnabled(type != ElementType::Grid && m_ui.group_clip->isChecked());
 	m_ui.ExteriorModeRadioBtn->setEnabled(type != ElementType::Grid && m_ui.group_clip->isChecked());
+
 }
 
 void SubPropertyClipping::onShowInteriorClick()
@@ -124,6 +142,12 @@ void SubPropertyClipping::onShowExteriorClick()
 {
 	if (m_dataDispatcher)
 		m_dataDispatcher->sendControl(new control::clippingEdition::SetMode(m_storedClip, ClippingMode::showExterior));
+}
+
+void SubPropertyClipping::onByPhaseClick()
+{
+	if (m_dataDispatcher)
+		m_dataDispatcher->sendControl(new control::clippingEdition::SetMode(m_storedClip, ClippingMode::byPhase));
 }
 
 void SubPropertyClipping::onActiveClipping()

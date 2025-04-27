@@ -47,7 +47,7 @@ uint64_t hash_vec3(const glm::vec3& vec)
     return result;
 }
 
-uint64_t HashFrame::hashRenderingData(VkExtent2D viewportExtent, const glm::dmat4& VP, const ClippingAssembly& clipAssembly, const std::vector<PointCloudDrawData>& m_pcDrawData, const DisplayParameters& display)
+uint64_t HashFrame::hashRenderingData(VkExtent2D viewportExtent, const glm::dmat4& VP, const std::map<std::wstring, ClippingAssembly>& clipAssemblies, const std::vector<PointCloudDrawData>& m_pcDrawData, const DisplayParameters& display)
 {
     uint64_t hash = 0;
 
@@ -56,35 +56,41 @@ uint64_t HashFrame::hashRenderingData(VkExtent2D viewportExtent, const glm::dmat
     std::hash<bool> hash_fn_b;
     std::hash<float> hash_fn_f;
     std::hash<int> hash_fn_i;
+    std::hash<std::wstring> hash_fn_wstr;
 
     hash += hash_fn_32(viewportExtent.width);
     hash += hash_fn_32(viewportExtent.height);
     hash += hash_dmat4(VP);
 
-    // ClippingAssembly
-    for (auto clipping : clipAssembly.clippingUnion)
+    // ClippingAssemblies
+    for (const auto& [phase, clipAssembly] : clipAssemblies)
     {
-        hash += hash_fn_32((uint32_t)clipping->mode);
-        hash += hash_dmat4(clipping->matRT_inv);
-        hash += hash_vec4(clipping->params);
-        hash += hash_fn_i(clipping->rampSteps);
-    }
+        hash += hash_fn_wstr(phase);
 
-    for (auto clipping : clipAssembly.clippingIntersection)
-    {
-        hash += hash_fn_32((uint32_t)clipping->mode);
-        hash += hash_dmat4(clipping->matRT_inv);
-        hash += hash_vec4(clipping->params);
-        hash += hash_fn_i(clipping->rampSteps);
-    }
+        for (auto clipping : clipAssembly.clippingUnion)
+        {
+            hash += hash_fn_32((uint32_t)clipping->mode);
+            hash += hash_dmat4(clipping->matRT_inv);
+            hash += hash_vec4(clipping->params);
+            hash += hash_fn_i(clipping->rampSteps);
+        }
 
-    for (auto clipping : clipAssembly.rampActives)
-    {
-        hash += hash_fn_32((uint32_t)clipping->mode);
-        hash += hash_dmat4(clipping->matRT_inv);
-        hash += hash_vec4(clipping->params);
-        hash += hash_vec3(clipping->color);
-        hash += hash_fn_i(clipping->rampSteps);
+        for (auto clipping : clipAssembly.clippingIntersection)
+        {
+            hash += hash_fn_32((uint32_t)clipping->mode);
+            hash += hash_dmat4(clipping->matRT_inv);
+            hash += hash_vec4(clipping->params);
+            hash += hash_fn_i(clipping->rampSteps);
+        }
+
+        for (auto clipping : clipAssembly.rampActives)
+        {
+            hash += hash_fn_32((uint32_t)clipping->mode);
+            hash += hash_dmat4(clipping->matRT_inv);
+            hash += hash_vec4(clipping->params);
+            hash += hash_vec3(clipping->color);
+            hash += hash_fn_i(clipping->rampSteps);
+        }
     }
 
     // PointCloudDrawData

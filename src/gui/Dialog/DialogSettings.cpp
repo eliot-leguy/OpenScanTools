@@ -29,9 +29,11 @@ DialogSettings::DialogSettings(IDataDispatcher& dataDispatcher, Translator* tran
 {
 	m_guizmoParams.hide();
 	m_ui.setupUi(this);
+	std::cout << "DialogSettings Constructor" << std::endl;
 
-	for (const auto& lang : m_translator->getAvailableLangage())
+	for (const auto& lang : m_translator->getAvailableLangage()) {
 		m_ui.langageComboBox->addItem(Translator::languageDictionnary.at(lang), QVariant((uint32_t)lang));
+	}
 	m_ui.langageComboBox->setCurrentIndex(m_translator->getActiveLangage());
 
 	for (UnitType unit : s_settingUnits) {

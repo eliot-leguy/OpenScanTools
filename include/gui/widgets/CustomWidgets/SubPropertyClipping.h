@@ -5,6 +5,8 @@
 #include "gui/IDataDispatcher.h"
 #include "models/Types.hpp"
 #include "utils/safe_ptr.h"
+#include "controller/ControllerContext.h"
+
 
 class Controller;
 class AClippingNode;
@@ -19,6 +21,7 @@ public:
 	void hideEvent(QHideEvent* event) override;
 
 	void setObject(const SafePtr<AClippingNode>& object);
+	void setControllerInfo(const Controller& controller);
 	void setDataDispatcher(IDataDispatcher* dataDispatcher);
 
 private:
@@ -31,6 +34,7 @@ private:
 public slots:
 	void onShowInteriorClick();
 	void onShowExteriorClick();
+	void onByPhaseClick();
 	void onActiveClipping();
 	void onMinClipDistEdit();
 	void onMaxClipDistEdit();
@@ -45,6 +49,7 @@ private:
 	Ui::SubPropertyClipping m_ui;
 	SafePtr<AClippingNode> m_storedClip;
 	IDataDispatcher* m_dataDispatcher = nullptr;
+	const ControllerContext* m_controllerContext = nullptr;
 };
 
 #endif //SUB_PROPERTY_CLIPPING_H_

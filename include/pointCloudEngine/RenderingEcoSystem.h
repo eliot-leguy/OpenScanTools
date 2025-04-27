@@ -44,7 +44,7 @@
 class HashFrame
 {
 public:
-    static uint64_t hashRenderingData(VkExtent2D viewportExtent, const glm::dmat4& VP, const ClippingAssembly& clipAssembly, const std::vector<PointCloudDrawData>& m_pcDrawData, const DisplayParameters& displayParams);
+    static uint64_t hashRenderingData(VkExtent2D viewportExtent, const glm::dmat4& VP, const std::map<std::wstring, ClippingAssembly>& clipAssembly, const std::vector<PointCloudDrawData>& m_pcDrawData, const DisplayParameters& displayParams);
 
     static uint64_t hashRenderingData_v2(const glm::dmat4& VP, const ClippingAssembly& clipAssembly, const std::vector<PointCloudDrawData>& m_pcDrawData, const DisplayParameters& displayParams);
 };

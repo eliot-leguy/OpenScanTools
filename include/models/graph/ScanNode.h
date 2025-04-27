@@ -30,6 +30,9 @@ public:
     MarkerDrawData getMarkerDrawData(const glm::dmat4& gTransfo) const;
     void updateMarker();
 
+    //using ScanData::getPhase;
+    //using Data::getPhase;
+
 protected:
     Color32 m_markerColor;
 
