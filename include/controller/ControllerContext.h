@@ -4,7 +4,7 @@
 #include "models/3d/DuplicationTypes.h"
 #include "models/application/List.h"
 #include "models/application/TagTemplate.h"
-#include "models/project/Marker.h"
+#include "models/data/Marker.h"
 #include "pointCloudEngine/RenderingTypes.h"
 #include "models/project/ProjectTypes.h"
 #include "models/data/PolylineMeasure/PolyLineTypes.h"
@@ -24,7 +24,6 @@
 
 class Author;
 class ScanNode;
-class CameraNode;
 
 struct CreationAttributes
 {
@@ -140,7 +139,6 @@ public:
 	ProjectInfos& getProjectInfo();
 	const ProjectInfos& cgetProjectInfo() const;
 	const ProjectInternalInfo& cgetProjectInternalInfo() const;
-	const ProjectInternalInfo& cgetProjectCentralInternalInfo() const;
 
 	std::unordered_map<xg::Guid, UserOrientation>& getUserOrientations();
 	const std::unordered_map<xg::Guid, UserOrientation>& cgetUserOrientations() const;
@@ -192,10 +190,8 @@ private:
 
 
 	//** From Project
-
 	ProjectInfos m_info;
 	ProjectInternalInfo m_internInfo;
-	ProjectInternalInfo m_centralInternInfo;
 
 	bool m_projectLoaded = false;
 

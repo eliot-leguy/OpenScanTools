@@ -8,6 +8,10 @@
 
 #include "utils/safe_ptr.h"
 
+#include "glm/glm.hpp"
+#include "glm/gtc/quaternion.hpp"
+
+#include <filesystem>
 #include <thread>
 #include <unordered_set>
 
@@ -25,6 +29,9 @@ public:
 
     int startInterface();
     int stopInterface();
+
+    void project_created(const std::filesystem::path& path, const std::wstring& name);
+    void project_opened(const std::filesystem::path& path);
 
 private:
     void run();
@@ -51,6 +58,8 @@ private:
     void createProject();
     void openProject();
 
+    SafePtr<AGraphNode> getScanOnName(std::wstring _name);
+    void applyRegistration();
     void manageVisibility(int current_idx, int total_station, SafePtr<AGraphNode> scan);
 
 private:
@@ -68,6 +77,16 @@ private:
     Controller& controller_;
     IDataDispatcher& data_dispatcher_;
 
+    struct Registration
+    {
+        SafePtr<AGraphNode> referential;
+        SafePtr<AGraphNode> station;
+        glm::dvec3 position;
+        glm::dquat rotation;
+    };
+
+    std::vector<Registration> referentials_;
+    std::vector<Registration> scans_registered_;
     std::unordered_set<SafePtr<AGraphNode>> scan_selection_;
     GraphManager& graph_;
 };

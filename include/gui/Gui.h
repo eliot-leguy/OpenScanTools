@@ -9,7 +9,6 @@
 #include "gui/Dialog/DialogShortcuts.h"
 #include "gui/Dialog/MessageSplashScreen.h"
 #include "gui/Dialog/DialogImportFileObject.h"
-#include "gui/Dialog/DialogOpenProjectCentral.h"
 #include "gui/Dialog/ProjectTemplateListDialog.h"
 #include "gui/widgets/PropertyClippingSettings.h"
 #include "gui/widgets/SplashScreen.h"
@@ -26,7 +25,6 @@
 class StatusPanel;
 class ViewportOrganizer;
 class MainToolBar;
-class Translator;
 class LicenseWindowsManager;
 class ToolBarProjectGroup;
 class Controller;
@@ -44,7 +42,7 @@ class Gui : public QMainWindow, IPanel
     Q_OBJECT
 
 public:
-	Gui(Controller& controller, Translator* translator);
+	Gui(Controller& controller);
 	~Gui();
 
     // from Gui
@@ -109,7 +107,6 @@ private:
 	void onProjectTemplateDialog(IGuiData* data);
 	void onObject3DPropertySettings(IGuiData* data);
 	void onOpenInExplorer(IGuiData* data);
-	void onOpenCentralProject(IGuiData* data);
 
 	void removeGroupInTab(const QString& tabName, const QString& widgetName);
 	void disableGroupInTab(const QString& tabName, const QString& widgetName);
@@ -142,14 +139,12 @@ private:
 
     StatusPanel* m_statusPanel;
 	ViewportOrganizer* m_centralWrapper;
-	Translator* m_translator;
 	DialogSettings m_dSettings;
 	DialogShortcuts m_dShortcuts;
 	DialogAbout m_dAbout;
 	MessageSplashScreen m_messageScreen;
 	SplashScreen m_splashScreen;
 	DialogImportFileObject m_importFileObject;
-	DialogOpenProjectCentral m_openCentralProject;
 	ProjectTemplateListDialog m_projectTemplatesDialog;
 	PropertyClippingSettings m_object3DPropertySettings;
 

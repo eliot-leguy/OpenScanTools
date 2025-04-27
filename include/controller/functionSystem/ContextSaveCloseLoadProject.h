@@ -2,8 +2,9 @@
 #define CONTEXT_PROJECT_LOAD_H_
 
 #include "controller/functionSystem/AContext.h"
+#include "gui/LanguageType.h"
 #include "models/project/ProjectInfos.h"
-#include "models/project/ProjectTypes.h"
+
 
 class CameraNode;
 
@@ -21,7 +22,7 @@ public:
 
 private:
     std::filesystem::path		m_templatePath;
-    ProjectTemplate             m_projectTemplate;
+    LanguageType                m_languageTemplate;
     std::filesystem::path		m_folderPath;
     ProjectInfos                m_projectInfo;
     bool						m_saveLastProject;
@@ -60,10 +61,9 @@ public:
 	ContextType getType() const override;
 
 private:
-    enum class WaitFor{Save, Restore, Central};
+    enum class WaitFor{Save, Restore};
     void prepareRestoreModal(Controller& controller);
 
-    ContextState processOpenCentral(const uint32_t& value, Controller& controller);
     ContextState processSaveReturn(const uint32_t& value);
     ContextState processRestoreReturn(const uint32_t& value);
 

@@ -1318,9 +1318,6 @@
     <ClCompile Include="..\..\src\gui\UnitConverter.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\gui\UnitUsage.cpp">
-      <Filter>src\gui</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\include\controller\messages\DataIdListMessage.cpp">
       <Filter>src\controller\messages</Filter>
     </ClCompile>
@@ -1656,9 +1653,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\controller\functionSystem\ContextImportOSTObjects.cpp">
       <Filter>src\controller\contexts</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\gui\Dialog\DialogOpenProjectCentral.cpp">
-      <Filter>src\gui\Dialog</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\gui\toolBars\ToolBarSlabGroup.cpp">
       <Filter>src\gui\toolBars</Filter>
@@ -2334,9 +2328,6 @@
     <QtMoc Include="..\..\include\gui\Dialog\DialogImportFileObject.h">
       <Filter>include\gui\Dialog</Filter>
     </QtMoc>
-    <QtMoc Include="..\..\include\gui\Dialog\DialogOpenProjectCentral.h">
-      <Filter>include\gui\Dialog</Filter>
-    </QtMoc>
     <QtMoc Include="..\..\include\gui\Dialog\DialogExportSubProject.h">
       <Filter>include\gui\Dialog</Filter>
     </QtMoc>
@@ -2403,11 +2394,13 @@
     <QtMoc Include="..\..\include\gui\toolBars\ToolBarManipulateObjects.h">
       <Filter>include\gui\toolBars</Filter>
     </QtMoc>
-    <QtMoc Include="..\..\include\gui\Dialog\DialogImportImage.h" />
     <QtMoc Include="..\..\include\gui\toolBars\ToolBarConvertImage.h">
       <Filter>include\gui\toolBars</Filter>
     </QtMoc>
     <QtMoc Include="..\..\include\gui\Dialog\DialogImportPCObject.h">
+      <Filter>include\gui\Dialog</Filter>
+    </QtMoc>
+    <QtMoc Include="..\..\include\gui\Dialog\DialogImportImage.h">
       <Filter>include\gui\Dialog</Filter>
     </QtMoc>
   </ItemGroup>
@@ -2420,9 +2413,6 @@
     </ClInclude>
     <ClInclude Include="..\..\include\io\SaveLoadSystem.h">
       <Filter>include\io</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\models\project\Marker.h">
-      <Filter>include\models\project</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\utils\Logger.h">
       <Filter>include\utils</Filter>
@@ -3354,9 +3344,6 @@
     <ClInclude Include="..\..\include\models\Types.hpp">
       <Filter>include\models</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\gui\texts\DefaultTemplatesTexts.hpp">
-      <Filter>include\gui\texts</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\gui\texts\DefaultUserLists.hpp">
       <Filter>include\gui\texts</Filter>
     </ClInclude>
@@ -3921,8 +3908,6 @@
     <ClInclude Include="..\..\include\gui\texts\FileSystemTexts.hpp">
       <Filter>include\gui\texts</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\gui\texts\SettingsTexts.hpp">
-    </ClInclude> 
     <ClInclude Include="..\..\include\utils\ArgParser.h">
       <Filter>include\utils</Filter>
     </ClInclude>
@@ -3934,6 +3919,12 @@
     </ClInclude>
     <ClInclude Include="..\..\include\gui\texts\AuthorTexts.hpp">
       <Filter>include\gui\texts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\gui\texts\SettingsTexts.hpp">
+      <Filter>include\gui\texts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\gui\LanguageType.h">
+      <Filter>include\gui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -4243,9 +4234,6 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="..\..\src\gui\forms\DialogExportFileObject.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
-    <QtUic Include="..\..\src\gui\forms\DialogOpenProjectCentral.ui">
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="..\..\src\gui\forms\DialogExportSubProject.ui">

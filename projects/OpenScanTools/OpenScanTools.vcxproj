@@ -327,17 +327,14 @@ xcopy /y /q "$(SolutionDir)ext\fbxSdk-2020.0.1\dll\libfbxsdk.dll" "$(SolutionDir
 xcopy /y /q "$(SolutionDir)ext\ifcplusplus\IfcPlusPlus.dll" "$(SolutionDir)build\$(Configuration)"
 xcopy /y /q "$(SolutionDir)ext\OCCT\bin\*.dll" "$(SolutionDir)build\$(Configuration)"
 xcopy /y /q "$(SolutionDir)ext\ReCapSDK\bin\*.dll" "$(SolutionDir)build\$(Configuration)"
-xcopy /y /b /q "$(SolutionDir)ext\cpr\bin\*.dll" "$(SolutionDir)build\$(Configuration)"
 
-md "$(SolutionDir)build\install"
-xcopy /y "$(SolutionDir)build\$(Configuration)\OpenScanTools.exe" "$(SolutionDir)build\install"
-windeployqt $(SolutionDir)build\install\OpenScanTools.exe
-xcopy /y "$(SolutionDir)translations\" "$(SolutionDir)build\install\translations"
+windeployqt $(SolutionDir)build\$(Configuration)\OpenScanTools.exe
+xcopy /y "$(SolutionDir)translations\" "$(SolutionDir)build\$(Configuration)\translations"
 
 signtool sign /sha1 "881d9294e1fdd77049171ada940dd511b709674f" /tr "http://time.certum.pl" /td sha256 /fd sha256 /v "$(SolutionDir)build\install\OpenScanTools.exe"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
-      <Message>Copying Resources to $(SolutionDir)build\Release_Prod</Message>
+      <Message>Copying Resources to $(SolutionDir)build\$(Configuration)</Message>
     </PostBuildEvent>
     <CustomBuild>
       <Command>glslangValidator -V -x %(FullPath) -o .\GeneratedShaders\%(Filename)%(Extension).spv</Command>
@@ -729,7 +726,6 @@ xcopy /y "$(SolutionDir)projects\OpenScanTools\OpenScanTools.ico" "$(SolutionDir
     <ClCompile Include="..\..\src\gui\Dialog\DialogImportMeshObject.cpp" />
     <ClCompile Include="..\..\src\gui\Dialog\DialogImportPCObject.cpp" />
     <ClCompile Include="..\..\src\gui\Dialog\DialogImportStepSimplification.cpp" />
-    <ClCompile Include="..\..\src\gui\Dialog\DialogOpenProjectCentral.cpp" />
     <ClCompile Include="..\..\src\gui\Dialog\DialogPointCloudObjectCreation.cpp" />
     <ClCompile Include="..\..\src\gui\Dialog\DialogProjectCreation.cpp" />
     <ClCompile Include="..\..\src\gui\Dialog\DialogRecentProjects.cpp" />
@@ -842,7 +838,6 @@ xcopy /y "$(SolutionDir)projects\OpenScanTools\OpenScanTools.ico" "$(SolutionDir
     <ClCompile Include="..\..\src\gui\UITransparencyConverter.cpp" />
     <ClCompile Include="..\..\src\gui\UnitConverter.cpp" />
     <ClCompile Include="..\..\src\gui\UrlHandler.cpp" />
-    <ClCompile Include="..\..\src\gui\UnitUsage.cpp" />
     <ClCompile Include="..\..\src\gui\viewport\PickingManager.cpp" />
     <ClCompile Include="..\..\src\gui\viewport\QuickBarNavigation.cpp" />
     <ClCompile Include="..\..\src\gui\viewport\ViewportOrganizer.cpp" />
@@ -1376,7 +1371,6 @@ xcopy /y "$(SolutionDir)projects\OpenScanTools\OpenScanTools.ico" "$(SolutionDir
     <QtMoc Include="..\..\include\gui\toolBars\ToolBarImportObjects.h" />
     <QtMoc Include="..\..\include\gui\Dialog\DialogExportFileObject.h" />
     <QtMoc Include="..\..\include\gui\Dialog\DialogImportFileObject.h" />
-    <QtMoc Include="..\..\include\gui\Dialog\DialogOpenProjectCentral.h" />
     <QtMoc Include="..\..\include\gui\Dialog\DialogExportSubProject.h" />
     <QtMoc Include="..\..\include\gui\Dialog\DialogSubProjectInfo.h" />
     <QtMoc Include="..\..\include\gui\Dialog\DialogImportAsciiPC.h" />
@@ -1388,6 +1382,7 @@ xcopy /y "$(SolutionDir)projects\OpenScanTools\OpenScanTools.ico" "$(SolutionDir
     <QtMoc Include="..\..\include\gui\Dialog\DialogImportImage.h" />
     <QtMoc Include="..\..\include\gui\Dialog\DialogImportPCObject.h" />
     <ClInclude Include="..\..\include\gui\GuiData\GuiDataAuthor.h" />
+    <ClInclude Include="..\..\include\gui\LanguageType.h" />
     <ClInclude Include="..\..\include\gui\style\CustomCursors.h" />
     <ClInclude Include="..\..\include\gui\style\IconObject.h" />
     <ClInclude Include="..\..\include\gui\texts\AuthorTexts.hpp" />
@@ -1595,7 +1590,6 @@ xcopy /y "$(SolutionDir)projects\OpenScanTools\OpenScanTools.ico" "$(SolutionDir
     <QtMoc Include="..\..\include\gui\widgets\CustomWidgets\ColorPicker.h" />
     <ClInclude Include="..\..\include\gui\texts\AboutTexts.hpp" />
     <ClInclude Include="..\..\include\gui\texts\ContextTexts.hpp" />
-    <ClInclude Include="..\..\include\gui\texts\DefaultTemplatesTexts.hpp" />
     <ClInclude Include="..\..\include\gui\texts\DefaultUserLists.hpp" />
     <ClInclude Include="..\..\include\gui\texts\ImageSettings_txt.hpp" />
     <QtMoc Include="..\..\include\gui\toolBars\ToolBarOthersModelsGroup.h" />
@@ -1905,7 +1899,6 @@ xcopy /y "$(SolutionDir)projects\OpenScanTools\OpenScanTools.ico" "$(SolutionDir
     </ClInclude>
     <ClInclude Include="..\..\include\io\exports\txtExport.h" />
     <ClInclude Include="..\..\include\io\SaveLoadSystem.h" />
-    <ClInclude Include="..\..\include\models\project\Marker.h" />
     <ClInclude Include="..\..\include\utils\ClockLock.hpp" />
     <ClInclude Include="..\..\include\utils\Color32.hpp" />
     <ClInclude Include="..\..\include\utils\Config.h" />
@@ -1939,7 +1932,6 @@ xcopy /y "$(SolutionDir)projects\OpenScanTools\OpenScanTools.ico" "$(SolutionDir
     <QtUic Include="..\..\src\gui\forms\DialogImportPCObject.ui" />
     <QtUic Include="..\..\src\gui\forms\DialogImportStepSimplification.ui" />
     <QtUic Include="..\..\src\gui\forms\DialogNewOSTVersion.ui" />
-    <QtUic Include="..\..\src\gui\forms\DialogOpenProjectCentral.ui" />
     <QtUic Include="..\..\src\gui\forms\DialogPointCloudObjectCreation.ui" />
     <QtUic Include="..\..\src\gui\forms\DialogProjectCreation.ui" />
     <QtUic Include="..\..\src\gui\forms\DialogProjectTemplate.ui" />

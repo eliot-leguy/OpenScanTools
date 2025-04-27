@@ -4,6 +4,7 @@
 #include <set>
 #include <string>
 
+#include "gui/LanguageType.h"
 #include "crossguid/guid.hpp"
 
 typedef xg::Guid listId;
@@ -42,6 +43,7 @@ public:
 	const std::set<Value>& clist() const;
 	bool insertStrValue(const std::wstring& strValue);
 	void insertValue(const Value& value);
+	void insertVector(const std::vector<std::array<std::wstring, 2>>& values, int li);
 
 	std::string toJson(const Value& value);
 
@@ -81,7 +83,7 @@ typedef List<std::wstring> UserList;
 enum class StandardType { Pipe, Torus, Sphere };
 typedef List<double> StandardList;
 
-std::vector<UserList> generateDefaultLists();
+std::vector<UserList> generateDefaultLists(LanguageType language);
 std::vector<StandardList> generateDefaultPipeStandardList();
 
 #endif // !USER_LIST_H_

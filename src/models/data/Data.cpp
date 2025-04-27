@@ -1,7 +1,7 @@
 #include "models/data/Data.h"
 #include "controller/ControllerContext.h"
+#include "gui/LanguageType.h"
 #include "utils/Utils.h"
-#include "Gui/Translator.h"
 #include "utils/Config.h"
 #include "utils/ProjectColor.hpp"
 #include "utils/time.h"
@@ -21,14 +21,15 @@ Data::Data()
 	, m_identifier(L"")
 	, m_hyperlinks({})
 	, m_color(ProjectColor::getColor("BLUE"))
+	, marker_icon_(scs::MarkerIcon::Max_Enum)
 {
-	LangageType language = Config::getLangage();
-	std::unordered_map<LangageType, std::wstring> disciplineDefault;
-	std::unordered_map<LangageType, std::wstring> phaseDefault;
-	disciplineDefault.insert({ LangageType::English, L"All" });
-	disciplineDefault.insert({ LangageType::Francais, L"Toutes" });
-	phaseDefault.insert({ LangageType::English,  L"All" });
-	phaseDefault.insert({ LangageType::Francais, L"Toutes" });
+	LanguageType language = Config::getLanguage();
+	std::unordered_map<LanguageType, std::wstring> disciplineDefault;
+	std::unordered_map<LanguageType, std::wstring> phaseDefault;
+	disciplineDefault.insert({ LanguageType::English, L"All" });
+	disciplineDefault.insert({ LanguageType::Francais, L"Toutes" });
+	phaseDefault.insert({ LanguageType::English,  L"All" });
+	phaseDefault.insert({ LanguageType::Francais, L"Toutes" });
 
 	if (disciplineDefault.find(language) != disciplineDefault.end() && phaseDefault.find(language) != phaseDefault.end())
 	{
@@ -37,8 +38,8 @@ Data::Data()
 	}
 	else
 	{
-		m_discipline = disciplineDefault.at(LangageType::English);
-		m_phase = phaseDefault.at(LangageType::English);
+		m_discipline = disciplineDefault.at(LanguageType::English);
+		m_phase = phaseDefault.at(LanguageType::English);
 	}
 
 	m_id = xg::newGuid();
@@ -63,6 +64,7 @@ Data::Data(const Data& copy)
 	, m_identifier(copy.getIdentifier())
 	, m_hyperlinks(copy.getHyperlinks())
 	, m_color(copy.getColor())
+	, marker_icon_(copy.marker_icon_)
 {}
 
 Data::~Data()
@@ -84,6 +86,7 @@ void Data::copyUIData(const Data& data, bool copyId)
 	m_userIndex = data.getUserIndex();
 	m_hyperlinks = data.getHyperlinks();
 	m_color = data.getColor();
+	marker_icon_ = data.getMarkerIcon();
 }
 
 void Data::setName(const std::wstring& name)
@@ -159,6 +162,11 @@ void Data::setHyperlinks(const std::unordered_map<hLinkId, s_hyperlink>& links)
 void Data::setColor(const Color32& color)
 {
 	m_color = color;
+}
+
+void Data::setMarkerIcon(scs::MarkerIcon icon)
+{
+	marker_icon_ = icon;
 }
 
 void Data::setDefaultData(const ControllerContext& context)
@@ -270,5 +278,10 @@ uint32_t Data::getUserIndex() const
 const Color32& Data::getColor() const
 {
 	return m_color;
+}
+
+scs::MarkerIcon Data::getMarkerIcon() const
+{
+	return marker_icon_;
 }
 

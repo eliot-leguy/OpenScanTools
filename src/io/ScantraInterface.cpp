@@ -149,6 +149,40 @@ int ScantraInterface::stopInterface()
     return 0;
 }
 
+void ScantraInterface::project_created(const std::filesystem::path& path, const std::wstring& name)
+{
+    if (!data_)
+        return;
+    {
+        scoped_lock<interprocess_mutex> lock(data_->mutex); /// or mutex ?
+        std::filesystem::path formated_path = path;
+        formated_path.make_preferred();
+        std::wcsncpy(data_->w_array[0], formated_path.native().c_str(), 256);
+        std::wcsncpy(data_->w_array[1], name.c_str(), 256);
+        data_->n_w = 2;
+
+        observer_->message_ = ScantraInterprocessObserver::hasCreatedProject;
+        Logger::log(LoggerMode::IOLog) << "+++ Scantra-project-created +++" << Logger::endl;
+    }
+    data_->update(observer_);
+}
+
+void ScantraInterface::project_opened(const std::filesystem::path& path)
+{
+    if (!data_)
+        return;
+    {
+        scoped_lock<interprocess_mutex> lock(data_->mutex);
+
+        std::wcsncpy(data_->w_array[0], path.c_str(), 256);
+        data_->n_w = 1;
+
+        observer_->message_ = ScantraInterprocessObserver::hasOpenedProject;
+        Logger::log(LoggerMode::IOLog) << "+++ Scantra-project-opened +++" << Logger::endl;
+    }
+    data_->update(observer_);
+}
+
 void ScantraInterface::run()
 {
     while (!done_)
@@ -336,7 +370,7 @@ void ScantraInterface::editIntersectionPlane()
         auto boxes = graph_.getNodesOnFilter<BoxNode>(filter_box);
 
         create_box = boxes.size() == 0;
-        box = create_box ? make_safe<BoxNode>(true) : *boxes.begin();
+        box = create_box ? make_safe<BoxNode>() : *boxes.begin();
         graph_.addNodesToGraph({ box });
     }
 
@@ -432,44 +466,37 @@ void ScantraInterface::editStationAdjustment()
     log << "t = (" << tx << ", " << ty << ", " << tz << ")\n";
     log << Logger::endl;
 
-    std::function<bool(ReadPtr<AGraphNode>&)> filter_station =
-        [station_id](const ReadPtr<AGraphNode>& r_node) {
-        return (r_node->getType() == ElementType::Scan) &&
-               (r_node->getName().compare(station_id) == 0);
-        };
+    glm::dvec3 station_pos(tx, ty, tz);
+    glm::dquat station_rot(q0, qx, qy, qz);
 
-    std::function<bool(ReadPtr<AGraphNode>&)> filter_datum =
-        [datum_id](const ReadPtr<AGraphNode>& r_node) {
-        return (r_node->getType() == ElementType::Scan) &&
-               (r_node->getName().compare(datum_id) == 0);
-        };
+    SafePtr<AGraphNode> scan = getScanOnName(station_id);
+    SafePtr<AGraphNode> datum = getScanOnName(datum_id);
 
-    auto scan_uset = graph_.getNodesOnFilter<AGraphNode>(filter_station);
-    if (scan_uset.size() != 1)
-        return;
-    SafePtr<AGraphNode> scan = *scan_uset.begin();
+    // Reset the geometric link. All computation are done in the global space.
+    AGraphNode::addGeometricLink(graph_.getRoot(), scan);
 
-    // We try a naive approach, just place the scan at the coordinates received
-    if (datum_id.compare(L"GlobalCoordinateSystem") == 0)
+    if (datum == scan)
     {
-        WritePtr<AGraphNode> wPtr = scan.get();
-        wPtr->setPosition(glm::dvec3(tx, ty, tz));
-        wPtr->setRotation(glm::dquat(q0, qx, qy, qz));
+        WritePtr<AGraphNode> wScan = scan.get();
+        if (wScan)
+        {
+            wScan->setPosition(station_pos); // should be (0, 0, 0)
+            wScan->setRotation(station_rot); // should be (1, 0, 0, 0)
+        }
     }
     else
     {
-        auto datum_uset = graph_.getNodesOnFilter<AGraphNode>(filter_datum);
-        if (scan_uset.size() != 1)
-            return;
-        SafePtr<AGraphNode> datum = *datum_uset.begin();
-        {
-            if (datum != scan)
-                AGraphNode::addGeometricLink(datum, scan);
-            WritePtr<AGraphNode> wPtr = scan.get();
-            wPtr->setPosition(glm::dvec3(tx, ty, tz));
-            wPtr->setRotation(glm::dquat(q0, qx, qy, qz));
-        }
+        // Wait for registration
+        scans_registered_.push_back({
+            datum,
+            scan,
+            station_pos,
+            station_rot
+            });
     }
+
+    if (current_entry == total_entry - 1)
+        applyRegistration();
 
     // On recoit les stations une par une.
     // Il faut rendre invisible les stations que l’on ne recevra pas
@@ -484,7 +511,7 @@ void ScantraInterface::createProject()
     log << "+++ Scantra-create-project +++\n";
     if (data_->n_w != 2)
     {
-        log << "Wrong parameters" << Logger::endl;
+        log << "Wrong parameter count" << Logger::endl;
         return;
     }
 
@@ -492,13 +519,13 @@ void ScantraInterface::createProject()
     std::wstring w_name(data_->w_array[1]);
     IOLOG << "Received project folder: " << w_folder << ", name: " << w_name << Logger::endl;
 
-    controller_.getControlListener()->notifyUIControl(new control::project::SaveCreate());
+    controller_.getControlListener()->notifyUIControl(new control::project::SaveCreate(w_folder, w_name, L"Scantra"));
 
-    ProjectInfos project_infos;
-    project_infos.m_projectName = w_name;
-    project_infos.m_company = L"Scantra";
-    NewProjectMessage msg(project_infos, w_folder, "");
-    controller_.getFunctionManager().feedMessage(controller_, &msg);
+    //ProjectInfos project_infos;
+    //project_infos.m_projectName = w_name;
+    //project_infos.m_company = L"Scantra";
+    //NewProjectMessage msg(project_infos, w_folder, "");
+    //controller_.getFunctionManager().feedMessage(controller_, &msg);
 }
 
 void ScantraInterface::openProject()
@@ -507,7 +534,7 @@ void ScantraInterface::openProject()
     log << "+++ Scantra-open-project +++\n";
     if (data_->n_w != 1)
     {
-        log << "Wrong parameters" << Logger::endl;
+        log << "Wrong parameter count" << Logger::endl;
         return;
     }
 
@@ -515,6 +542,57 @@ void ScantraInterface::openProject()
     log << "Received project path: " << project_path << Logger::endl;
 
     controller_.getControlListener()->notifyUIControl(new control::project::SaveCloseLoad(project_path));
+}
+
+SafePtr<AGraphNode> ScantraInterface::getScanOnName(std::wstring _name)
+{
+    std::function<bool(ReadPtr<AGraphNode>&)> filter_station =
+        [_name](const ReadPtr<AGraphNode>& r_node) {
+        return (r_node->getType() == ElementType::Scan) &&
+            (r_node->getName().compare(_name) == 0);
+        };
+
+    auto scan_uset = graph_.getNodesOnFilter<AGraphNode>(filter_station);
+    if (scan_uset.size() != 1)
+        return SafePtr<AGraphNode>();
+
+    return *scan_uset.begin();
+}
+
+void ScantraInterface::applyRegistration()
+{
+    for (auto reg : scans_registered_)
+    {
+        if (reg.referential == reg.station)
+            continue;
+
+        glm::dvec3 ref_pos(0.0, 0.0, 0.0);
+        glm::dquat ref_rot(1.0, 0.0, 0.0, 0.0);
+        
+        // If the referential is null, then the ref coordinates are unchanged.
+        {
+            ReadPtr<AGraphNode> rDatum = reg.referential.cget();
+            if (rDatum)
+            {
+                ref_pos = rDatum->getCenter();
+                ref_rot = rDatum->getRotation();
+            }
+        }
+
+        {
+            WritePtr<AGraphNode> wScan = reg.station.get();
+            if (wScan)
+            {
+                wScan->setPosition(ref_pos);
+                wScan->setRotation(ref_rot);
+
+                wScan->addLocalTranslation(reg.position);
+                wScan->addPreRotation(reg.rotation);
+            }
+        }
+    }
+
+    scans_registered_.clear();
 }
 
 void ScantraInterface::manageVisibility(int current_station, int total_station, SafePtr<AGraphNode> scan)

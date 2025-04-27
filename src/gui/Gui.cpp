@@ -102,9 +102,7 @@
 #include "gui/GuiData/GuiDataClipping.h"
 #include "gui/GuiData/GuiDataGeneralProject.h"
 #include "gui/ShortcutSystem.h"
-#include "gui/Translator.h"
 #include "gui/ribbon/ribbontabcontent.h"
-//#include "gui/texts/AboutTexts.hpp"
 #include "controller/Controller.h"
 #include "controller/controls/ControlProject.h"
 #include "controller/controls/ControlApplication.h"
@@ -137,7 +135,7 @@
 
 static FileUrlHandler* s_fileHandler = new FileUrlHandler();
 
-Gui::Gui(Controller& controller, Translator* translator)
+Gui::Gui(Controller& controller)
     : QMainWindow(nullptr/*, Qt::FramelessWindowHint | Qt::WindowSystemMenuHint*/)
     , m_dataDispatcher(controller.getDataDispatcher())
 	, m_isActivePopup(false)
@@ -145,15 +143,13 @@ Gui::Gui(Controller& controller, Translator* translator)
 	, m_isEditing(false)
     , m_maximizedFrameless(true)
 	, m_centralWrapper(nullptr)
-	, m_translator(translator)
-	, m_dSettings(m_dataDispatcher, translator, this)
+	, m_dSettings(m_dataDispatcher, this)
 	, m_dShortcuts(this)
 	, m_dAbout(m_dataDispatcher, this)
 	, m_messageScreen(this)
 	, m_importFileObject(m_dataDispatcher, this)
 	, m_projectTemplatesDialog(m_dataDispatcher, this)
 	, m_object3DPropertySettings(m_dataDispatcher, this)
-	, m_openCentralProject(m_dataDispatcher, this)
 {
     QCoreApplication::setOrganizationName("OpenScanTools");
 	QCoreApplication::setApplicationName("OpenScanTools");
@@ -203,10 +199,6 @@ Gui::Gui(Controller& controller, Translator* translator)
 	m_objectProperties.insert({ ElementType::ViewPoint, new PropertyViewpoint(controller, this) });
 	m_objectProperties.insert({ ElementType::MeshObject, new PropertyMeshObject(controller, this) });
 	m_objectProperties.insert({ ElementType::Box, new PropertyBox(controller, this) });
-	// FIXME(robin) - Pourquoi 2 fois le PropertyBox ?
-	//              - Ne peut-on pas utiliser le même ?
-	//              - Plus généralemnet, vérifier si on ne peut pas s’abstenir d’initialiser la dizaine de panneau de propriété...
-	m_objectProperties.insert({ ElementType::Grid, new PropertyBox(controller, this) });
 	m_objectProperties.insert({ ElementType::Cylinder, new PropertyPipe(controller, this) });
 	m_objectProperties.insert({ ElementType::Torus, new PropertyElbow(controller, this) });
 	m_objectProperties.insert({ ElementType::Sphere, new PropertySphere(controller, this) });
@@ -407,11 +399,7 @@ Gui::Gui(Controller& controller, Translator* translator)
     registerGuiDataFunction(guiDType::projectLoaded, &Gui::onProjectLoaded);
     registerGuiDataFunction(guiDType::quitEvent, &Gui::onQuitEvent);
     registerGuiDataFunction(guiDType::newProject, &Gui::onNewProject);
-    registerGuiDataFunction(guiDType::openProject, &Gui::onOpenProject);
-
-	//new
-	//registerGuiDataFunction(guiDType::openProjectCentral, &Gui::onOpenProjectCentral);
-
+	registerGuiDataFunction(guiDType::openProject, &Gui::onOpenProject);
     registerGuiDataFunction(guiDType::importScans, &Gui::onImportScans);
     registerGuiDataFunction(guiDType::splashScreenStart, &Gui::onSplashScreenStart);
     registerGuiDataFunction(guiDType::splashScreenEnd, &Gui::onSplashScreenEnd);
@@ -422,7 +410,6 @@ Gui::Gui(Controller& controller, Translator* translator)
 	registerGuiDataFunction(guiDType::projectTemplateDialog, &Gui::onProjectTemplateDialog);
 	registerGuiDataFunction(guiDType::clippingSettingsProperties, &Gui::onObject3DPropertySettings);
 	registerGuiDataFunction(guiDType::openInExplorer, &Gui::onOpenInExplorer);
-	registerGuiDataFunction(guiDType::openProjectCentral, &Gui::onOpenCentralProject);
     // register all properties type
     m_dataDispatcher.registerObserverOnKey(this, guiDType::projectDataProperties);
 	m_dataDispatcher.registerObserverOnKey(this, guiDType::clippingSettingsProperties);
@@ -581,20 +568,12 @@ void Gui::onQuitEvent(IGuiData * data)
 
 void Gui::onNewProject(IGuiData *data)
 {
-	auto* idata = static_cast<GuiDataNewProject*>(data);
-	std::unordered_map<LangageType, ProjectTemplate> projectTemplates;
-	for (LangageType lang : {LangageType::English, LangageType::Francais})
-	{
-		m_translator->setActiveLangage(lang);
-		ProjectTemplate pTemplate;
-		pTemplate.m_lists = generateDefaultLists();
-		pTemplate.m_template = sma::GenerateDefaultTemplates();
-		projectTemplates[lang] = pTemplate;
-	}
+    auto* idata = static_cast<GuiDataNewProject*>(data);
+    std::unordered_map<LanguageType, ProjectTemplate> projectTemplates;
 
-	m_translator->setActiveLangage(Config::getLangage());
-
-	DialogProjectCreation* projectDialog = new DialogProjectCreation(m_dataDispatcher, QString::fromStdWString(idata->m_folder.wstring()), idata->m_templates, projectTemplates, this);
+    DialogProjectCreation* projectDialog = new DialogProjectCreation(m_dataDispatcher, this);
+    projectDialog->setDefaultValues(idata->default_folder_, idata->default_name_, idata->default_company_);
+    projectDialog->setAdditionalTemplatesPath(idata->templates_);
     projectDialog->show();
 }
 
@@ -630,33 +609,6 @@ void Gui::onOpenInExplorer(IGuiData* data)
 	QProcess* process = new QProcess(this);
 	process->start("explorer.exe", args);
 }
-
-void Gui::onOpenCentralProject(IGuiData* data)
-{
-	m_openCentralProject.show();
-}
-
-//new
-/*
-void Gui::onOpenProjectCentral(IGuiData* data)
-{
-	auto* idata = static_cast<GuiDataOpenProjectCentral*>(data);
-	QString fileName = QFileDialog::getOpenFileName(this, TEXT_OPEN_PROJECT, QString::fromStdWString(idata->m_folder.wstring()), TEXT_FILE_TYPE_TLP, nullptr);
-
-	GUILOG << "Open project Central : " << fileName.toStdString() << Logger::endl;
-	if (fileName != "")
-	{
-		m_dataDispatcher.sendControl(new control::modal::ModalReturnFiles({ fileName.toStdWString() }));
-		m_dataDispatcher.sendControl(new control::application::temporary::TemporaryPath(std::filesystem::path(fileName.toStdString()).parent_path()));
-	}
-	else
-		m_dataDispatcher.sendControl(new control::function::Validate());
-
-
-	DialogOpenProjectCentral* openProjectCentral = new DialogOpenProjectCentral(m_dataDispatcher, this);
-	openProjectCentral->show();
-
-}*/
 
 void Gui::onOpenProject(IGuiData *data)
 {
@@ -804,7 +756,7 @@ void Gui::onEditing(const bool& isEditing)
 }
 
 void  Gui::changeEvent(QEvent* event)
-{//fixme POC dynamic langage
+{//fixme POC dynamic Language
 	//	switch (event->type()) 
 	//	{
 	//		// this event is send if a translator is loaded

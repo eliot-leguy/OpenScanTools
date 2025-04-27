@@ -5,6 +5,7 @@
 #include "crossguid/guid.hpp"
 #include "utils/safe_ptr.h"
 
+#include "gui/LanguageType.h"
 #include "models/application/List.h"
 
 namespace sma
@@ -33,10 +34,6 @@ namespace sma
 		SafePtr<UserList> m_fieldReference;
 
 		std::wstring m_defaultValue;
-
-		tField(tFieldId id, std::wstring name, tFieldType type, xg::Guid listId, std::wstring defaultValue)
-			: m_id(id), m_name(name), m_type(type), m_fieldReferenceId(listId), m_fieldReference(), m_defaultValue(defaultValue)
-		{}
 
 		tField()
 			: m_id(), m_name(), m_type(), m_fieldReferenceId(), m_fieldReference(), m_defaultValue()
@@ -115,9 +112,7 @@ namespace sma
 		std::unordered_map<tFieldId, tField> m_fields;
 	};
 
-	
-
-	std::vector<TagTemplate> GenerateDefaultTemplates();
+	std::vector<TagTemplate> GenerateDefaultTemplates(LanguageType lang);
 }
 
 namespace std

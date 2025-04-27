@@ -143,6 +143,7 @@ void ExportData(nlohmann::json& json, const Data& data)
 	}
 	json[Key_Hyperlinks] = hLinkarray;
 	json[Key_ColorRGBA] = { data.getColor().r, data.getColor().g, data.getColor().b, data.getColor().a };
+	json[Key_IconId] = magic_enum::enum_name(data.getMarkerIcon());
 }
 
 void ExportClippingData(nlohmann::json& json, const ClippingData& data)
@@ -175,7 +176,6 @@ void ExportTagData(nlohmann::json& json, const TagData& data)
 		templateId = rTemp->getId();
 
 	json[Key_TemplateId] = templateId.str();
-	json[Key_IconId] = magic_enum::enum_name(data.getMarkerIcon());
 
 	const std::unordered_map<sma::tFieldId, std::wstring>& fields = data.getFields();
 	for (auto it = fields.cbegin(); it != fields.cend(); it++)
@@ -753,9 +753,6 @@ nlohmann::json DataSerializer::Serialize(const ProjectInfos& data)
 	json[Key_DefaultRampSteps] = data.m_defaultRampSteps;
 	json[Key_ImportScanTranslation] = { data.m_importScanTranslation.x, data.m_importScanTranslation.y, data.m_importScanTranslation.z };
 	json[Key_Project_Id] = data.m_id;
-	json[Key_Is_Central] = false;//data.m_isCentral;
-	json[Key_CentralId] = data.m_centralId;
-	json[Key_CentralPath] = Utils::to_utf8(data.m_centralProjectPath.wstring());
 	json[Key_CustomScanFolderPath] = Utils::to_utf8(data.m_customScanFolderPath.wstring());
 	return json;
 }

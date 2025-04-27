@@ -169,7 +169,7 @@ void ObjectNodeVisitor::getObjectMarkerText(const SafePtr<AObjectNode>& object, 
         // PERF - La mise en forme des coordonnées est malgré tout relativement longue. On pourrait penser à stocker la mise en forme entre chaque frame.
         if (filter & TEXT_SHOW_COORD_BIT)
         {
-            glm::dvec3 pos = unit_converter::meterToX(rObj->getCenter(), m_displayParameters.m_unitUsage.distanceUnit);
+            glm::dvec3 pos = UnitConverter::meterToX(rObj->getCenter(), m_displayParameters.m_unitUsage.distanceUnit);
 
             // Format the coordinates values
             parameters[8] = fmt::format(m_coord_format.data(), pos.x, pos.y, pos.z);
@@ -189,12 +189,12 @@ void ObjectNodeVisitor::getObjectMarkerText(const SafePtr<AObjectNode>& object, 
 
         if (rCylinder && (filter & TEXT_SHOW_DIAMETER_BIT))
         {
-            double r = unit_converter::meterToX(2.0 * rCylinder->getRadius(), m_displayParameters.m_unitUsage.diameterUnit);
+            double r = UnitConverter::meterToX(2.0 * rCylinder->getRadius(), m_displayParameters.m_unitUsage.diameterUnit);
             parameters[6] = fmt::format("diam=" + m_diameter_format, r);
         }
         if (filter & TEXT_SHOW_LENGTH_BIT)
         {
-            double l = unit_converter::meterToX(rCylinder->getLength(), m_displayParameters.m_unitUsage.distanceUnit);
+            double l = UnitConverter::meterToX(rCylinder->getLength(), m_displayParameters.m_unitUsage.distanceUnit);
             parameters[7] = fmt::format("len=" + m_length_format, l);
         }
     }
@@ -253,7 +253,7 @@ bool ObjectNodeVisitor::drawManipulatorText()
     case ManipulationMode::Extrusion:
     case ManipulationMode::Scale:
     case ManipulationMode::Translation:
-        text += " : " + fmt::format(m_length_format, unit_converter::meterToX(rManipNode->getDistanceToDisplay(), m_camera.m_unitUsage.distanceUnit));
+        text += " : " + fmt::format(m_length_format, UnitConverter::meterToX(rManipNode->getDistanceToDisplay(), m_camera.m_unitUsage.distanceUnit));
         break;
     case ManipulationMode::Rotation:
         text += " : " + fmt::format(m_simple_format, rManipNode->getDistanceToDisplay(), "Â°");
@@ -332,8 +332,8 @@ void ObjectNodeVisitor::initTextsFormat()
     // Any further options for parameters display (traduction, precision, unit, etc) should be implemented here.
     {
         // NOTE - The unit converter already include a space before the unit.
-        std::string diam_unit = unit_converter::getUnitText(m_displayParameters.m_unitUsage.diameterUnit).toStdString();
-        std::string dist_unit = unit_converter::getUnitText(m_displayParameters.m_unitUsage.distanceUnit).toStdString();
+        std::string diam_unit = UnitConverter::getUnitText(m_displayParameters.m_unitUsage.diameterUnit).toStdString();
+        std::string dist_unit = UnitConverter::getUnitText(m_displayParameters.m_unitUsage.distanceUnit).toStdString();
         uint32_t digits = m_displayParameters.m_unitUsage.displayedDigits; // just a shorter name :)
 
         // See https://fmt.dev/latest/syntax.html#syntax for more infos about the fmt formating options. 
@@ -471,7 +471,7 @@ void ObjectNodeVisitor::drawImGuiMeasureText(const SegmentDrawData segment)
         if (csPos_mid[i].z < 0.0f)
             continue;
 
-        std::string number = fmt::format(m_length_format, unit_converter::meterToX(length[i], m_displayParameters.m_unitUsage.distanceUnit));
+        std::string number = fmt::format(m_length_format, UnitConverter::meterToX(length[i], m_displayParameters.m_unitUsage.distanceUnit));
 
         ImUtilsText toDraw;
         //TO DO : Use segments hovered/selected data
@@ -925,7 +925,7 @@ void ObjectNodeVisitor::drawImGuiStats(VulkanViewport& viewport)
 
 std::string ObjectNodeVisitor::formatNumber(double num)
 {
-    double d = unit_converter::meterToX(num, m_displayParameters.m_unitUsage.distanceUnit);
+    double d = UnitConverter::meterToX(num, m_displayParameters.m_unitUsage.distanceUnit);
     return fmt::format(m_length_format, d);
 }
 
@@ -1267,7 +1267,6 @@ void ObjectNodeVisitor::nextGeoNode(const SafePtr<AGraphNode>& node, const Trans
     switch (elemType)
     {
     case ElementType::Box:
-    case ElementType::Grid:
     case ElementType::Cylinder:
     case ElementType::Torus:
     case ElementType::Point:
@@ -1314,36 +1313,36 @@ void ObjectNodeVisitor::bakeGraphics(const SafePtr<AGraphNode>& node, const Tran
 
     glm::dmat4 transfoMat = gTransfo.getTransformation();
 
-    bool drawImguitext = m_displayParameters.m_displayAllMarkersTexts;
+    {
+        ReadPtr<AObjectNode> rObj = static_read_cast<AObjectNode>(node);
+        if (!rObj)
+            return;
+        switch (elemType)
+        {
+        case ElementType::Scan:
+            if ((m_displayParameters.m_markerMask & SHOW_SCAN_MARKER) != 0)
+                MarkerRenderer::getMarkerDrawData(transfoMat, *&rObj);
+            break;
+        case ElementType::Tag:
+            if ((m_displayParameters.m_markerMask & SHOW_TAG_MARKER) != 0)
+                MarkerRenderer::getMarkerDrawData(transfoMat, *&rObj);
+            break;
+        case ElementType::Point:
+        case ElementType::BeamBendingMeasure:
+        case ElementType::ColumnTiltMeasure:
+        case ElementType::ViewPoint:
+            MarkerRenderer::getMarkerDrawData(transfoMat, *&rObj);
+            break;
+        }
+    }
+
     switch (elemType)
     {
-    case ElementType::Tag:
-    {
-        ReadPtr<TagNode> rTag = static_read_cast<TagNode>(node);
-        if (!rTag)
-            break;
-        if ((m_displayParameters.m_markerMask & SHOW_TAG_MARKER) != 0)
-            m_markerDrawData.emplace_back(rTag->getMarkerDrawData(transfoMat));
-        break;
-    }
-    case ElementType::Point:
-    {
-        ReadPtr<PointNode> rPoint = static_read_cast<PointNode>(node);
-        if (!rPoint)
-            break;
-        m_markerDrawData.emplace_back(rPoint->getMarkerDrawData(transfoMat));
-        break;
-    }
     case ElementType::Scan:
     {
         WritePtr<ScanNode> wScan = static_write_cast<ScanNode>(node);
         if (!wScan)
             break;
-        // Marker
-        if ((m_displayParameters.m_markerMask & SHOW_SCAN_MARKER) != 0)
-            m_markerDrawData.emplace_back(wScan->getMarkerDrawData(transfoMat));
-        else
-            drawImguitext = false;
 
         // Point Cloud
         if (m_panoramicScan && (node != m_panoramicScan))
@@ -1383,33 +1382,7 @@ void ObjectNodeVisitor::bakeGraphics(const SafePtr<AGraphNode>& node, const Tran
             m_bakedPointCloud.push_back({ transfoMat, pco->getScanGuid(), color, pco->getUniform(m_uniformSwapIndex) , pco->getClippable(), pco->getPhase(), true});
         break;
     }
-    case ElementType::BeamBendingMeasure:
-    {
-        ReadPtr<BeamBendingMeasureNode> rBbm = static_read_cast<BeamBendingMeasureNode>(node);
-        if (!rBbm)
-            break;
-        m_markerDrawData.emplace_back(rBbm->getMarkerDrawData(transfoMat));
-        break;
-    }
-    case ElementType::ColumnTiltMeasure:
-    {
-        ReadPtr<ColumnTiltMeasureNode> rCtm = static_read_cast<ColumnTiltMeasureNode>(node);
-        if (!rCtm)
-            break;
-        m_markerDrawData.emplace_back(rCtm->getMarkerDrawData(transfoMat));
-        break;
-    }
-    case ElementType::ViewPoint:
-    {
-        ReadPtr<ViewPointNode> rVp = static_read_cast<ViewPointNode>(node);
-        if (!rVp)
-            break;
-        m_markerDrawData.emplace_back(rVp->getMarkerDrawData(transfoMat));
-        break;
-    }
-
     // Mesh
-    case ElementType::Grid:
     case ElementType::Box:
     {
         WritePtr<BoxNode> wBox = static_write_cast<BoxNode>(node);
@@ -1479,6 +1452,8 @@ void ObjectNodeVisitor::bakeGraphics(const SafePtr<AGraphNode>& node, const Tran
         break;
     }
 
+    bool drawImguitext = m_displayParameters.m_displayAllMarkersTexts;
+    drawImguitext &= !((elemType == ElementType::Scan) && (m_displayParameters.m_markerMask & SHOW_SCAN_MARKER) == 0);
     switch (graphType)
     {
     case AGraphNode::Type::Default:
