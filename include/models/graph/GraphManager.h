@@ -102,6 +102,7 @@ public:
 	void replaceObjectsSelected(std::unordered_set<SafePtr<AGraphNode>> toSelectDatas);
 
 	void getClippingAssembly(ClippingAssembly& retAssembly, bool filterActive, bool filterSelected) const;
+	void getClippingAssembly(std::map<std::wstring, ClippingAssembly>& retAssembly, bool filterActive, bool filterSelected) const;
 
 	BoundingBoxD getScanBoundingBox(ObjectStatusFilter status) const;
 	std::unordered_set<SafePtr<ScanNode>> getVisibleScans(const tls::ScanGuid& pano) const;

@@ -279,7 +279,16 @@ bool ContextExportPC::processExport(Controller& controller, CSVWriter* csv_write
             if (m_state != ContextState::running || !success)
                 break;
 
-            success &= TlScanOverseer::getInstance().clipScan(pc.header.guid, pc.transfo, task.clippings, scanFileWriter.get());
+            std::wstring phase;
+            if (task.clippings.count(pc.phase) <= 0) {
+                phase = L"";
+            }
+            else {
+                phase = pc.phase;
+            }
+            
+
+            success &= TlScanOverseer::getInstance().clipScan(pc.header.guid, pc.transfo, task.clippings.at(phase), scanFileWriter.get());
         }
 
         // TODO - FileType::RCP & m_parameters.pointDensity
@@ -308,8 +317,8 @@ void ContextExportPC::prepareTasks(Controller& controller, std::vector<ContextEx
     //std::vector<tls::PointCloudInstance> pcoInfos = graph.getPointCloudInstances(xg::Guid(), false, m_parameters.exportPCOs, m_parameters.pointCloudFilter);
     tls::PointFormat common_format = getCommonFormat(pcInfos);
 
-    ClippingAssembly clipping_assembly;
-    graph.getClippingAssembly(clipping_assembly,
+    std::map<std::wstring, ClippingAssembly> clipping_assemblies;
+    graph.getClippingAssembly(clipping_assemblies,
         m_parameters.clippingFilter == ExportClippingFilter::ACTIVE,
         m_parameters.clippingFilter == ExportClippingFilter::SELECTED
     );
@@ -356,9 +365,11 @@ void ContextExportPC::prepareTasks(Controller& controller, std::vector<ContextEx
                 task.transfo.setScale(glm::dvec3(1.0));
 
                 task.input_pcs = pcInfos;
-                task.clippings.clippingUnion.push_back(std::make_shared<BoxClippingGeometry>(ClippingMode::showInterior,
+
+				//Commented for now TODO adapt to the multiple clipping Assembly
+                /*task.clippings.clippingUnion.push_back(std::make_shared<BoxClippingGeometry>(ClippingMode::showInterior,
                     box.getInverseRotationTranslation(),
-                    glm::vec4(box.getScale(), 0.f), 0));
+                        glm::vec4(box.getScale(), 0.f), 0));*/
 
                 export_tasks.push_back(task);
             }
@@ -389,7 +400,8 @@ void ContextExportPC::prepareTasks(Controller& controller, std::vector<ContextEx
             task.transfo.setScale(glm::dvec3(1.0));
 
             task.input_pcs = pcInfos;
-            r_clipping->pushClippingGeometries(task.clippings, *&r_clipping);
+			//TODO adapt to the multiple clipping Assembly
+            //r_clipping->pushClippingGeometries(task.clippings, *&r_clipping);
 
             export_tasks.push_back(task);
         }
@@ -404,10 +416,13 @@ void ContextExportPC::prepareTasks(Controller& controller, std::vector<ContextEx
         task.header.precision = m_parameters.encodingPrecision;
         task.header.format = common_format;
 
-        task.transfo = getBestTransformation(clipping_assembly, pcInfos);
+
+        task.transfo = getBestTransformation(clipping_assemblies.at(L""), pcInfos);
 
         task.input_pcs = pcInfos;
-        task.clippings = clipping_assembly;
+
+        task.clippings = clipping_assemblies;
+
 
         export_tasks.push_back(task);
     }
@@ -418,8 +433,8 @@ void ContextExportPC::prepareTasks(Controller& controller, std::vector<ContextEx
         {
             // Filter out the tls that we can copy
             if (m_parameters.outFileType == FileType::TLS &&
-                pcInfo.header.precision == m_parameters.encodingPrecision &&
-                clipping_assembly.empty())
+                pcInfo.header.precision == m_parameters.encodingPrecision /*&&
+				clipping_assembly.empty()*/) //Adapt to the multiple clipping Assembly
             {
                 if (pcInfo.header.precision == m_parameters.encodingPrecision)
                 {
@@ -448,9 +463,9 @@ void ContextExportPC::prepareTasks(Controller& controller, std::vector<ContextEx
                 task.transfo = pcInfo.transfo;
 
                 task.input_pcs = { pcInfo };
-                task.clippings = clipping_assembly;
+                task.clippings = clipping_assemblies;
 
-                if (!clipping_assembly.empty() && !m_forSubProject)
+                if (!clipping_assemblies.empty() && !m_forSubProject)
                 {
                     task.file_name += is_rcp ? L"" : L"_clipped";
                     task.header.name += L"_clipped";

@@ -8,6 +8,8 @@
 #include "models/pointCloud/PointCloudInstance.h"
 #include "models/3d/BoundingBox.h"
 
+
+#include <map> 
 #include <vector>
 #include <glm/glm.hpp>
 
@@ -43,7 +45,7 @@ protected:
         tls::ScanHeader header;
         TransformationModule transfo;
         std::vector<tls::PointCloudInstance> input_pcs; // if empty, take all the point clouds
-        ClippingAssembly clippings;
+        std::map<std::wstring, ClippingAssembly> clippings;
     };
     bool processExport(Controller& controller, CSVWriter* csv_writer);
     void copyTls(Controller& controller, CopyTask task);
