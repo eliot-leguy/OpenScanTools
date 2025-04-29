@@ -83,6 +83,7 @@ public slots:
 	void disableAllRamps();
 	void externCliping();
 	void internClipping();
+	void byPhaseClipping();
 	void pickItems();
 	void dropManualItems();
 	void dropElem(TreeNode* dest);

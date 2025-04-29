@@ -1607,30 +1607,44 @@ void ObjectNodeVisitor::bakeClipping(const SafePtr<AGraphNode>& node, const Tran
         }
         rClipping->setClippingMode(ClippingMode::byPhase);
     }
+
     else {
-        if (phase.empty()) {
-            for (auto& [key, clippingAssembly] : m_clippingAssemblies) {
-                if (rClipping->isClippingActive()) {
-                    rClipping->pushClippingGeometries(clippingAssembly, gTransfo);
-                }
-                if (rClipping->isRampActive()) {
-                    rClipping->pushRampGeometries(clippingAssembly.rampActives, gTransfo);
-                }
+        for (auto& [key, clippingAssembly] : m_clippingAssemblies) {
+            if (rClipping->isClippingActive()) {
+                rClipping->pushClippingGeometries(clippingAssembly, gTransfo);
             }
-        }
-        else {
-            auto it = m_clippingAssemblies.find(phase);
-            if (it != m_clippingAssemblies.end()) {
-                ClippingAssembly& clippingAssembly = it->second;
-                if (rClipping->isClippingActive()) {
-                    rClipping->pushClippingGeometries(clippingAssembly, gTransfo);
-                }
-                if (rClipping->isRampActive()) {
-                    rClipping->pushRampGeometries(clippingAssembly.rampActives, gTransfo);
-                }
+            if (rClipping->isRampActive()) {
+                rClipping->pushRampGeometries(clippingAssembly.rampActives, gTransfo);
             }
         }
     }
+
+
+	// Clipping (exterior or interior) only on selected phase
+    //else {
+    //    if (phase.empty()) {
+    //        for (auto& [key, clippingAssembly] : m_clippingAssemblies) {
+    //            if (rClipping->isClippingActive()) {
+    //                rClipping->pushClippingGeometries(clippingAssembly, gTransfo);
+    //            }
+    //            if (rClipping->isRampActive()) {
+    //                rClipping->pushRampGeometries(clippingAssembly.rampActives, gTransfo);
+    //            }
+    //        }
+    //    }
+    //    else {
+    //        auto it = m_clippingAssemblies.find(phase);
+    //        if (it != m_clippingAssemblies.end()) {
+    //            ClippingAssembly& clippingAssembly = it->second;
+    //            if (rClipping->isClippingActive()) {
+    //                rClipping->pushClippingGeometries(clippingAssembly, gTransfo);
+    //            }
+    //            if (rClipping->isRampActive()) {
+    //                rClipping->pushRampGeometries(clippingAssembly.rampActives, gTransfo);
+    //            }
+    //        }
+    //    }
+    //}
 }
 
 
