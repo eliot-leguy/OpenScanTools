@@ -670,6 +670,60 @@ void GraphManager::getClippingAssembly(ClippingAssembly& retAssembly, bool filte
 	return;
 }
 
+void GraphManager::getClippingAssembly(
+	std::map<std::wstring, ClippingAssembly>& assemblies,
+	bool filterActive, bool filterSelected) const
+{
+	const auto clips = getClippingObjects(filterActive, filterSelected);
+
+	// First, collect all unique phases to ensure all assemblies are initialized
+	assemblies[L""]= ClippingAssembly();
+	for (const SafePtr<AClippingNode>& clip : clips)
+	{
+		if (!clip) continue;
+		ReadPtr<AClippingNode> r = clip.cget();
+		if (!r) continue;
+		const std::wstring phase = r->getPhase();
+		assemblies[phase]; // Initialize the assembly for this phase if not present
+	}
+
+	// Now process each clipping object
+	for (const SafePtr<AClippingNode>& clip : clips)
+	{
+		if (!clip) continue;
+
+		WritePtr<AClippingNode> n = clip.get();
+		if (!n) continue;
+
+		const std::wstring phase = n->getPhase();
+		TransformationModule T(n->getTransformation());
+
+		if (n->getClippingMode() == ClippingMode::byPhase)
+		{
+			// Add to all assemblies with appropriate mode
+			for (auto& [asmPhase, assem] : assemblies)
+			{
+				n->setClippingMode(phase == asmPhase
+					? ClippingMode::showInterior
+					: ClippingMode::showExterior);
+				if (n->isClippingActive()) n->pushClippingGeometries(assem, T);
+				if (n->isRampActive()) n->pushRampGeometries(assem.rampActives, T);
+			}
+			n->setClippingMode(ClippingMode::byPhase); // Restore original mode
+		}
+		else
+		{
+			// Non-byPhase clippings go only to their own phase's assembly
+			for (auto& [asmPhase, assem] : assemblies)
+			{
+				if (n->isClippingActive()) n->pushClippingGeometries(assem, T);
+				if (n->isRampActive()) n->pushRampGeometries(assem.rampActives, T);
+			}
+		}
+	}
+}
+
+
 BoundingBoxD GraphManager::getScanBoundingBox(ObjectStatusFilter status) const
 {
 	auto pc_instances = getPointCloudInstances(xg::Guid(), true, true, status);
@@ -704,59 +758,58 @@ std::vector<tls::PointCloudInstance> GraphManager::getVisiblePointCloudInstances
 	return getPointCloudInstances(pano, scans, pcos, ObjectStatusFilter::VISIBLE);
 }
 
-std::vector<tls::PointCloudInstance> GraphManager::getPointCloudInstances(const tls::ScanGuid& pano, bool getScans, bool getPcos, ObjectStatusFilter filterStatus) const
-{
-	std::vector<tls::PointCloudInstance> result;
+std::vector<tls::PointCloudInstance> GraphManager::getPointCloudInstances(const tls::ScanGuid& pano, bool getScans, bool getPcos, ObjectStatusFilter filterStatus) const  
+{  
+   std::vector<tls::PointCloudInstance> result;  
 
-	if (pano != xg::Guid())
-	{
-		std::unordered_set<SafePtr<ScanNode>> scans = 
-			getNodesOnFilter<ScanNode>([&pano, &getScans, &getPcos](ReadPtr<AGraphNode>& node)
-											{ return node->getType() == ElementType::Scan; },
-									   [&pano](ReadPtr<ScanNode>& node)
-											{ return (pano != xg::Guid() && node->getScanGuid() == pano); }
-			);
+   if (pano != xg::Guid())  
+   {  
+       std::unordered_set<SafePtr<ScanNode>> scans =   
+           getNodesOnFilter<ScanNode>([&pano, &getScans, &getPcos](ReadPtr<AGraphNode>& node)  
+                                           { return node->getType() == ElementType::Scan; },  
+                                      [&pano](ReadPtr<ScanNode>& node)  
+                                           { return (pano != xg::Guid() && node->getScanGuid() == pano); }  
+           );  
 
-		if (scans.size() > 1)
-			assert(false);
+       if (scans.size() > 1)  
+           assert(false);  
 
-		SafePtr<ScanNode> scan = *scans.begin();
-		ReadPtr<ScanNode> rScan = scan.cget();
-		if (!rScan)
-			return result;
+       SafePtr<ScanNode> scan = *scans.begin();  
+       ReadPtr<ScanNode> rScan = scan.cget();  
+       if (!rScan)  
+           return result;  
 
-		tls::ScanHeader header;
-		tlGetScanHeader(rScan->getScanGuid(), header);
-		result.emplace_back(header, *&rScan, rScan->getClippable());
+       tls::ScanHeader header;  
+       tlGetScanHeader(rScan->getScanGuid(), header);  
+       result.emplace_back(header, *&rScan, rScan->getClippable(), rScan->getPhase());  
 
-		// QUESTION - Est-ce que le scan panoramique annule l'export des pcos ?
-		return result;
-	}
+       return result;  
+   }  
 
-	std::unordered_set<SafePtr<APointCloudNode>> pcs =
-		getNodesOnFilter<APointCloudNode>([&getScans, &getPcos, &filterStatus](ReadPtr<AGraphNode>& node)
-			{ 
-				bool verifType = getScans && node->getType() == ElementType::Scan
-					|| getPcos && node->getType() == ElementType::PCO;
-				bool verifState = (filterStatus == ObjectStatusFilter::ALL ||
-					(filterStatus == ObjectStatusFilter::VISIBLE && node->isVisible()) ||
-					(filterStatus == ObjectStatusFilter::SELECTED && node->isSelected()));
-				return verifType && verifState;
-			}
-			);
+   std::unordered_set<SafePtr<APointCloudNode>> pcs =  
+       getNodesOnFilter<APointCloudNode>([&getScans, &getPcos, &filterStatus](ReadPtr<AGraphNode>& node)  
+           {   
+               bool verifType = getScans && node->getType() == ElementType::Scan  
+                   || getPcos && node->getType() == ElementType::PCO;  
+               bool verifState = (filterStatus == ObjectStatusFilter::ALL ||  
+                   (filterStatus == ObjectStatusFilter::VISIBLE && node->isVisible()) ||  
+                   (filterStatus == ObjectStatusFilter::SELECTED && node->isSelected()));  
+               return verifType && verifState;  
+           }  
+           );  
 
-	for (const SafePtr<APointCloudNode>& pc : pcs)
-	{
-		ReadPtr<APointCloudNode> rPc = pc.cget();
-		if (!rPc)
-			continue;
+   for (const SafePtr<APointCloudNode>& pc : pcs)  
+   {  
+       ReadPtr<APointCloudNode> rPc = pc.cget();  
+       if (!rPc)  
+           continue;  
 
-		tls::ScanHeader header;
-		if (tlGetScanHeader(rPc->getScanGuid(), header))
-			result.emplace_back(header, rPc->getTransformationModule(), rPc->getClippable());
-	}
+       tls::ScanHeader header;  
+       if (tlGetScanHeader(rPc->getScanGuid(), header))  
+           result.emplace_back(header, rPc->getTransformationModule(), rPc->getClippable(), rPc->getPhase());  
+   }  
 
-	return (result);
+   return (result);  
 }
 
 uint64_t GraphManager::getProjectPointsCount() const

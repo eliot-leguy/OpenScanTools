@@ -11,6 +11,7 @@ namespace tls
         ScanHeader header;
         TransformationModule transfo;
         bool isClippable;
+        std::wstring phase;
     };
 }
 
