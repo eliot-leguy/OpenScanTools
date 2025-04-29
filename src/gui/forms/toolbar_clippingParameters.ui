@@ -127,6 +127,13 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QRadioButton" name="phaseRadioButton">
+        <property name="text">
+         <string>Show Phase</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>

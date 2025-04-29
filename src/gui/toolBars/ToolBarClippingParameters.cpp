@@ -22,6 +22,7 @@ ToolBarClippingParameters::ToolBarClippingParameters(IDataDispatcher &dataDispat
 
     connect(m_ui.exteriorRadioButton, &QRadioButton::released, this, [this]() { updateDefaultClippingMode(ClippingMode::showExterior); });
     connect(m_ui.interiorRadioButton, &QRadioButton::released, this, [this]() { updateDefaultClippingMode(ClippingMode::showInterior); });
+    connect(m_ui.phaseRadioButton, &QRadioButton::released, this, [this]() { updateDefaultClippingMode(ClippingMode::byPhase); });
 
     m_dataDispatcher.registerObserverOnKey(this, guiDType::projectLoaded);
     m_dataDispatcher.registerObserverOnKey(this, guiDType::defaultClipParams);
