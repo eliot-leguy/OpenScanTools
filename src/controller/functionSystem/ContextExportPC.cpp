@@ -331,79 +331,92 @@ void ContextExportPC::prepareTasks(Controller& controller, std::vector<ContextEx
 
         for (const SafePtr<BoxNode>& grid_node : grid_nodes)
         {
-            std::vector<GridBox> extracted_boxes;
-            ReadPtr<BoxNode> r_grid = grid_node.cget();
-            if (!r_grid || r_grid->isSelected() == false ||
-                !GridCalculation::calculateBoxes(extracted_boxes, *&r_grid))
+            std::vector<GridBox> boxes;
+            ReadPtr<BoxNode> rg = grid_node.cget();
+            if (!rg || !rg->isSelected() ||
+                !GridCalculation::calculateBoxes(boxes, *&rg))
                 continue;
 
-            size_t box_per_sub_project = 0;
+            std::size_t box_per_sub_project = 0;
 
-            for (const GridBox& box : extracted_boxes)
+            for (const GridBox& box : boxes)
             {
-                ExportTask task;
-                std::wstring box_xyz_name;
-                box_xyz_name = r_grid->getComposedName()
-                    + L"_" + Utils::wCompleteWithZeros(box.position.x)
-                    + L"_" + Utils::wCompleteWithZeros(box.position.y)
-                    + L"_" + Utils::wCompleteWithZeros(box.position.z);
-
-                if (is_rcp)
+                /* one export *per phase* */
+                for (auto& [phaseName, phaseAsm] : clipping_assemblies)
                 {
-                    task.file_name += m_parameters.fileName.wstring();
-                    if (m_parameters.maxScanPerProject > 0)
-                        task.file_name += L"_" + std::to_wstring(box_per_sub_project++ / m_parameters.maxScanPerProject);
+                    ExportTask task;
+
+                    /* 3-A  build file name */
+                    std::wstring boxName = rg->getComposedName() +
+                        L"_" + Utils::wCompleteWithZeros(box.position.x) +
+                        L"_" + Utils::wCompleteWithZeros(box.position.y) +
+                        L"_" + Utils::wCompleteWithZeros(box.position.z);
+
+                    std::wstring prettyPhase = phaseName.empty() ? L"default" : phaseName;
+
+                    if (is_rcp)
+                    {
+                        task.file_name = m_parameters.fileName.wstring() + L"_" + prettyPhase;
+                        if (m_parameters.maxScanPerProject > 0)
+                            task.file_name += L"_" +
+                            std::to_wstring(box_per_sub_project++ / m_parameters.maxScanPerProject);
+                    }
+                    else
+                    {
+                        task.file_name = boxName + L"_" + prettyPhase;
+                    }
+
+                    /* 3-B  header */
+                    task.header.name = boxName + L"_" + prettyPhase;
+                    task.header.precision = m_parameters.encodingPrecision;
+                    task.header.format = common_format;
+
+                    /* 3-C  transform */
+                    task.transfo = static_cast<TransformationModule>(box);
+                    task.transfo.setScale(glm::dvec3(1.0));
+
+                    /* 3-D  point-clouds */
+                    task.input_pcs = pcInfos;
+
+                    /* 3-E  grid box interior */
+                    task.clippings[phaseName].clippingUnion.push_back(
+                        std::make_shared<BoxClippingGeometry>(ClippingMode::showInterior,
+                            box.getInverseRotationTranslation(),
+                            glm::vec4(box.getScale(), 0.f), 0));
+
+                    /* 3-F  add phase’s interior/exterior clippings */
+                    task.clippings.insert(clipping_assemblies.begin(), clipping_assemblies.end());
+
+                    export_tasks.push_back(std::move(task));
                 }
-                else
-                    task.file_name += box_xyz_name;
-
-                task.header.name = box_xyz_name;
-                task.header.precision = m_parameters.encodingPrecision;
-                task.header.format = common_format;
-
-                task.transfo = (TransformationModule)box;
-                task.transfo.setScale(glm::dvec3(1.0));
-
-                task.input_pcs = pcInfos;
-
-				//Commented for now TODO adapt to the multiple clipping Assembly
-                /*task.clippings.clippingUnion.push_back(std::make_shared<BoxClippingGeometry>(ClippingMode::showInterior,
-                    box.getInverseRotationTranslation(),
-                        glm::vec4(box.getScale(), 0.f), 0));*/
-
-                export_tasks.push_back(task);
             }
         }
     }
     // The output files are based on the clippings
     else if (m_parameters.method == ExportClippingMethod::CLIPPING_SEPARATED)
     {
-        std::unordered_set<SafePtr<AClippingNode>> clippings_to_export = graph.getClippingObjects(
-            m_parameters.clippingFilter == ExportClippingFilter::ACTIVE,
-            m_parameters.clippingFilter == ExportClippingFilter::SELECTED
-        );
-
-        for (SafePtr<AClippingNode> clipping : clippings_to_export)
+        for (auto& [phaseName, phaseAsm] : clipping_assemblies)
         {
-            ReadPtr<AClippingNode> r_clipping = clipping.cget();
-            if (!r_clipping)
-                continue;
-
             ExportTask task;
-            task.file_name = r_clipping->getComposedName();
 
-            task.header.name = r_clipping->getComposedName();
+            /* 4-A   file & header names */
+            std::wstring pretty = phaseName.empty() ? L"default" : phaseName;
+            task.file_name = m_parameters.fileName.wstring() + L"_" + pretty;
+            task.header.name = pretty;
             task.header.precision = m_parameters.encodingPrecision;
             task.header.format = common_format;
 
-            task.transfo = (TransformationModule)(*&r_clipping);
+            /* 4-B   best transform centred on that phase’s “interior” */
+            task.transfo = getBestTransformation(phaseAsm, pcInfos);
             task.transfo.setScale(glm::dvec3(1.0));
 
+            /* 4-C   same input PCs for every phase-file */
             task.input_pcs = pcInfos;
-			//TODO adapt to the multiple clipping Assembly
-            //r_clipping->pushClippingGeometries(task.clippings, *&r_clipping);
 
-            export_tasks.push_back(task);
+            /* 4-D   give the WHOLE map (needed by processExport) */
+            task.clippings = clipping_assemblies;
+
+            export_tasks.push_back(std::move(task));
         }
     }
     // The output files are based on the scans
