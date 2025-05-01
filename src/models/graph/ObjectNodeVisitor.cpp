@@ -1215,10 +1215,10 @@ void ObjectNodeVisitor::bakeGraph(SafePtr<AGraphNode> root)
     m_cs_marker_max_z = (m_projMatrix * glm::dvec4(0.0, 0.0, m_displayParameters.m_markerOptions.maximumDisplayDistance, 1.0)).z;
 
 
-    // Collecter toutes les phases
+	// Collect all the phases of Clipping Object
     std::unordered_set<std::wstring> phases = collectPhases(root);
+	phases.insert(L""); // Add the empty phase to the set
 
-    // Initialiser les ClippingAssembly
     initializeClippingAssemblies(phases);
 
 
@@ -1554,6 +1554,7 @@ std::unordered_set<std::wstring> ObjectNodeVisitor::collectPhases(const SafePtr<
         if (!rNode)
             return;
 
+		// Verify if node is a ClippingNode
         ReadPtr<AClippingNode> rClipping = static_read_cast<AClippingNode>(node);
         if (rClipping)
         {
@@ -1569,7 +1570,7 @@ std::unordered_set<std::wstring> ObjectNodeVisitor::collectPhases(const SafePtr<
         {
             collectPhasesRecursively(child);
         }
-    };
+        };
 
     collectPhasesRecursively(root);
 
@@ -1709,12 +1710,12 @@ void ObjectNodeVisitor::draw_baked_pointClouds(VkCommandBuffer cmdBuffer, Render
     TlProjectionInfo projInfoNode{ glm::dmat4(), m_viewProjMatrix, m_fbExtent.width, m_fbExtent.height, m_displayParameters.m_pointSize, m_decimationRatio, m_displayParameters.m_deltaFilling };
 
     m_drawHasMissingScanPart = false;
-    ClippingAssembly emptyAssembly;
+	ClippingAssembly emptyAssembly;
 
     for (const PointCloudDrawData& bakedPC : m_bakedPointCloud)
     {
         const auto& phase = bakedPC.phase;
-        const auto& clippingAssembly = phase.empty() ? emptyAssembly : m_clippingAssemblies.at(phase);
+        const auto& clippingAssembly = phase.empty() ? m_clippingAssemblies.at(L"") : m_clippingAssemblies.at(phase);
         clipAndDrawPointCloud(cmdBuffer, renderer, bakedPC, projInfoNode, bakedPC.clippable ? clippingAssembly : emptyAssembly);
     }
 }
