@@ -5588,6 +5588,12 @@ Vous confirmez?</translation>
         <source>Disable</source>
         <translation>Désactiver</translation>
     </message>
+	<message>
+        <location filename="../../include/gui/texts/TreePanelTexts.hpp" line="61"/>
+        <location filename="../../include/gui/Texts.hpp" line="100"/>
+        <source>Show by phase</source>
+        <translation>Montrer par phase</translation>
+    </message>
     <message>
         <location filename="../../include/gui/texts/TreePanelTexts.hpp" line="59"/>
         <location filename="../../include/gui/Texts.hpp" line="99"/>
@@ -10753,6 +10759,11 @@ Exemple: incliner un objet selon une pente.</translation>
         <location filename="../../src/gui/forms/toolbar_clippingParameters.ui" line="123"/>
         <source>Show Interior</source>
         <translation>Montrer intérieur</translation>
+    </message>
+	    <message>
+        <location filename="../../src/gui/forms/toolbar_clippingParameters.ui" line="139"/>
+        <source>Show by Phase</source>
+        <translation>Montrer par phase</translation>
     </message>
 </context>
 <context>

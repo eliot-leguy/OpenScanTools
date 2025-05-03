@@ -129,8 +129,14 @@
       </item>
       <item>
        <widget class="QRadioButton" name="phaseRadioButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
-         <string>Show Phase</string>
+         <string>Show by Phase</string>
         </property>
        </widget>
       </item>
